@@ -16,28 +16,26 @@ final class NotchPanelController: NSObject {
     /// reconfigurations keep the pet on the MacBook.
     private var hostScreen: NSScreen
 
-    /// Collapsed frame shown over the notch. We extend the physical notch
-    /// down by `notchExtensionBelow` points so there's room to curve the
-    /// bottom corners below the real cutout — otherwise the rounding has
-    /// nowhere to live. The extra height lives on the menu bar directly
-    /// below the notch, which is empty in practice.
+    /// Collapsed frame. The panel is exactly as tall as the physical notch
+    /// cavity, but extends sideways by `sideExtension` on each side so the
+    /// pet sprite and status icon have real estate that sits on the menu
+    /// bar to the left / right of the physical cutout. The black background
+    /// flows seamlessly into the notch because the cavity is already black.
     private var collapsedSize: CGSize {
         let notch = hostScreen.notchSize ?? CGSize(width: 200, height: 32)
-        return CGSize(width: notch.width, height: notch.height + Self.notchExtensionBelow)
+        return CGSize(
+            width: notch.width + 2 * Self.sideExtension,
+            height: notch.height
+        )
     }
 
     /// Expanded frame shown below the notch (room popover).
     private let expandedSize = CGSize(width: 360, height: 460)
 
-    /// How many points the panel extends below the physical notch cut-out.
-    /// The bottom `notchExtensionBelow` points is where the rounded corners
-    /// live; anything higher sits inside the real notch cavity.
-    static let notchExtensionBelow: CGFloat = 16
-    /// Height of the physical notch, used by SwiftUI subviews that want to
-    /// position content inside the cavity vs the extension below it.
-    var notchCavityHeight: CGFloat {
-        hostScreen.notchSize?.height ?? 32
-    }
+    /// How many points the collapsed strip extends beyond the physical notch
+    /// on each horizontal side. The pet (22pt) and status icon (16pt) live
+    /// inside these extensions.
+    static let sideExtension: CGFloat = 34
 
     init(screen: NSScreen, petState: PetState) {
         self.hostScreen = screen
@@ -67,7 +65,7 @@ final class NotchPanelController: NSObject {
         let root = NotchRootView(
             uiState: uiState,
             petState: petState,
-            cavityHeight: notchCavityHeight
+            sideExtension: Self.sideExtension
         )
         let host = FirstMouseHostingView(rootView: root)
         host.autoresizingMask = [.width, .height]

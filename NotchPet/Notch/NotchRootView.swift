@@ -7,10 +7,10 @@ import SwiftUI
 struct NotchRootView: View {
     @ObservedObject var uiState: NotchPanelState
     @ObservedObject var petState: PetState
-    /// Height in points of the physical MacBook notch cavity. Content above
-    /// this line sits inside the real notch cutout; below it sits on the
-    /// menu bar and is where the rounded bottom corners live.
-    let cavityHeight: CGFloat
+    /// How far the collapsed panel extends past the physical notch on each
+    /// horizontal side. Used to place the pet / status icon flush against
+    /// the left and right extensions rather than inside the cavity.
+    let sideExtension: CGFloat
 
     var body: some View {
         ZStack {
@@ -18,13 +18,13 @@ struct NotchRootView: View {
                 RoomView(petState: petState)
                     .transition(.opacity)
             } else {
-                CollapsedNotchView(petState: petState, cavityHeight: cavityHeight)
+                CollapsedNotchView(petState: petState, sideExtension: sideExtension)
                     .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: uiState.isExpanded)
         .background(Color.black)
-        .clipShape(NotchClipShape(cornerRadius: uiState.isExpanded ? 18 : 12))
+        .clipShape(NotchClipShape(cornerRadius: uiState.isExpanded ? 18 : 10))
         .ignoresSafeArea()
     }
 }
@@ -45,27 +45,36 @@ struct NotchClipShape: Shape {
     }
 }
 
-/// Collapsed view sized to fit over the physical notch. Pet lives on the
-/// left, state indicator on the right, with the middle left as pure black
-/// so it melts visually into the notch cavity.
+/// Collapsed view. Pet sits inside the left side extension (menu bar area
+/// just left of the physical notch), status icon sits inside the right
+/// side extension. The middle of the strip overlaps the physical notch
+/// cavity and shows pure black, so the whole strip reads as a horizontally
+/// stretched notch.
 private struct CollapsedNotchView: View {
     @ObservedObject var petState: PetState
-    let cavityHeight: CGFloat
+    let sideExtension: CGFloat
 
     private let petSide: CGFloat = 22
     private let iconSide: CGFloat = 16
 
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            PetView(size: petSide, petState: petState)
-                .padding(.leading, 6)
-                .padding(.top, max(0, (cavityHeight - petSide) / 2))
+        HStack(spacing: 0) {
+            // Left extension: pet sprite, centered inside the extension.
+            ZStack {
+                PetView(size: petSide, petState: petState)
+            }
+            .frame(width: sideExtension)
+
+            // Middle: physical notch cavity. Pure black.
             Spacer(minLength: 0)
-            StatusIconView(petState: petState, side: iconSide)
-                .padding(.trailing, 8)
-                .padding(.top, max(0, (cavityHeight - iconSide) / 2))
+
+            // Right extension: status indicator.
+            ZStack {
+                StatusIconView(petState: petState, side: iconSide)
+            }
+            .frame(width: sideExtension)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
