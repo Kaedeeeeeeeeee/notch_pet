@@ -149,9 +149,9 @@ private struct ActionBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ActionButton(label: "喂食", symbol: "🍚") { petState.feed() }
-            ActionButton(label: "玩耍", symbol: "🎈") { petState.play() }
-            ActionButton(label: "休息", symbol: "💤") { petState.rest() }
+            ActionButton(label: "喂食", icon: .feed) { petState.feed() }
+            ActionButton(label: "玩耍", icon: .play) { petState.play() }
+            ActionButton(label: "休息", icon: .rest) { petState.rest() }
         }
         .disabled(!petState.canInteract)
         .opacity(petState.canInteract ? 1.0 : 0.35)
@@ -160,14 +160,13 @@ private struct ActionBar: View {
 
 private struct ActionButton: View {
     let label: String
-    let symbol: String
+    let icon: ActionIconView.Kind
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 3) {
-                Text(symbol)
-                    .font(.system(size: 18))
+            VStack(spacing: 4) {
+                ActionIconView(kind: icon, size: 24)
                 Text(label)
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
@@ -176,10 +175,10 @@ private struct ActionButton: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.white.opacity(0.10))
+                    .fill(Color.white.opacity(0.06))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .strokeBorder(Color.white.opacity(0.25), lineWidth: 1)
+                            .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
                     )
             )
         }

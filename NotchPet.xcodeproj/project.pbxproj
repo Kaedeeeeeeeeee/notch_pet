@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		10925B542627B159CAEFE445 /* ActionIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464970C6F894F925C1B474F9 /* ActionIconView.swift */; };
 		2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89332AD3A71CB1B6C62FE845 /* NotchGeometry.swift */; };
 		4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */; };
 		571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */; };
@@ -30,6 +31,7 @@
 		0E72747044D897EF0B9EDC54 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		27F84C91E830F0E76A9B1F1D /* NotchPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44852ED00B2C856AC36383F8 /* NotchPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanelController.swift; sourceTree = "<group>"; };
+		464970C6F894F925C1B474F9 /* ActionIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconView.swift; sourceTree = "<group>"; };
 		5F5AA7B41C812CA4AFAF841B /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
 		69A361FEDC68AB778250C96F /* PetStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetStateStore.swift; sourceTree = "<group>"; };
 		7AEABA289258E6E18698446C /* RoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomView.swift; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 		A81D7CB0BC76E71DF9ADEB97 /* Room */ = {
 			isa = PBXGroup;
 			children = (
+				464970C6F894F925C1B474F9 /* ActionIconView.swift */,
 				7AEABA289258E6E18698446C /* RoomView.swift */,
 			);
 			path = Room;
@@ -191,6 +194,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10925B542627B159CAEFE445 /* ActionIconView.swift in Sources */,
 				571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */,
 				AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */,
 				4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */,
