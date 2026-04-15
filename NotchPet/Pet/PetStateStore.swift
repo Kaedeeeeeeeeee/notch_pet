@@ -4,28 +4,39 @@ import Foundation
 /// class so the observable properties stay cheap and Codable evolution doesn't
 /// leak into the UI model.
 struct PetStateSnapshot: Codable {
+    let schemaVersion: Int
     let id: UUID
     let name: String
     let bornAt: Date
+    let generation: Int
     let hunger: Double
     let mood: Double
     let energy: Double
     let isAsleep: Bool
     let lastTickAt: Date
-    /// Schema version — bump when fields change in an incompatible way.
-    let schemaVersion: Int
+    let ageActiveSeconds: Double
+    let stage: LifecycleStage
+    let departedAt: Date?
+    let personality: PersonalityTrait?
+    let careHistory: CareHistory
 
     @MainActor
     init(from state: PetState) {
+        self.schemaVersion = PetStateStore.currentSchema
         self.id = state.id
         self.name = state.name
         self.bornAt = state.bornAt
+        self.generation = state.generation
         self.hunger = state.hunger
         self.mood = state.mood
         self.energy = state.energy
         self.isAsleep = state.isAsleep
         self.lastTickAt = state.lastTickAt
-        self.schemaVersion = PetStateStore.currentSchema
+        self.ageActiveSeconds = state.ageActiveSeconds
+        self.stage = state.stage
+        self.departedAt = state.departedAt
+        self.personality = state.personality
+        self.careHistory = state.careHistory
     }
 
     @MainActor
@@ -34,11 +45,17 @@ struct PetStateSnapshot: Codable {
             id: id,
             name: name,
             bornAt: bornAt,
+            generation: generation,
             hunger: hunger,
             mood: mood,
             energy: energy,
             isAsleep: isAsleep,
-            lastTickAt: lastTickAt
+            lastTickAt: lastTickAt,
+            ageActiveSeconds: ageActiveSeconds,
+            stage: stage,
+            departedAt: departedAt,
+            personality: personality,
+            careHistory: careHistory
         )
     }
 }
@@ -46,7 +63,7 @@ struct PetStateSnapshot: Codable {
 /// JSON persistence for PetState under ~/Library/Application Support.
 @MainActor
 final class PetStateStore {
-    nonisolated static let currentSchema: Int = 1
+    nonisolated static let currentSchema: Int = 2
 
     private let fileURL: URL
 
@@ -62,13 +79,16 @@ final class PetStateStore {
     }
 
     /// Returns persisted state if available, otherwise a freshly hatched pet.
+    /// Schema-version mismatches silently fall back to a new pet; MVP accepts
+    /// that there's no migration path yet.
     func load() -> PetState {
         guard let data = try? Data(contentsOf: fileURL) else {
             return PetState()
         }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        guard let snapshot = try? decoder.decode(PetStateSnapshot.self, from: data) else {
+        guard let snapshot = try? decoder.decode(PetStateSnapshot.self, from: data),
+              snapshot.schemaVersion == Self.currentSchema else {
             return PetState()
         }
         return snapshot.materialize()

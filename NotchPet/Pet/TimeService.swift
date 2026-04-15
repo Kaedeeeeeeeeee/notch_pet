@@ -78,7 +78,21 @@ final class TimeService {
 
         if isActive && !petState.isAsleep {
             petState.applyDecay(activeSeconds: delta)
+            petState.advanceLifecycle(activeSeconds: delta)
             petState.lastTickAt = now
+        }
+
+        // Handle the departed → new-generation rollover. We wait a grace
+        // window inside .departed (farewell time) and then reset the
+        // existing PetState instance in place so all observers see the new
+        // egg without reconstructing views.
+        if petState.stage == .departed, let departedAt = petState.departedAt {
+            let elapsed = now.timeIntervalSince(departedAt)
+            if elapsed >= LifecycleClock.departGraceSeconds {
+                petState.rebornAsNewGeneration()
+                store.save(petState)
+                lastPersistedAt = now
+            }
         }
 
         if now.timeIntervalSince(lastPersistedAt) >= persistInterval {

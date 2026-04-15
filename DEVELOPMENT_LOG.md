@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**Block 2 完成**：状态模型 + 时间服务 + 持久化 + 真实 RoomView + 夜间睡眠 + 全局 dismiss 监听。Block 3 进行中。
+**Block 3 完成**：生命周期阶段机（egg/child/adult/elder/departed）+ 性格系统（基于 care history 衍生）+ 世代循环（departed → 新蛋 → 新世代）。
 
 ---
 
@@ -75,13 +75,18 @@
 - [x] DEBUG 模式 30x decay 加速（`NOTCHPET_DECAY_SPEEDUP` env 覆盖）
 - [x] ESC + 点击面板外部自动收起（`NSEvent.addGlobalMonitorForEvents`，监听回调做面板命中测试避免面板内点击被误判）
 
-### Block 3 — 生命周期 & 性格（未开工）
+### Block 3 — 生命周期 & 性格 ✅（不含配对/遗传）
 
-- [ ] `LifecycleService`：10 天阶段机（幼年/成熟/育儿/告别）
-- [ ] 性格向量：幼年期可塑 → 成熟期固化
-- [ ] 性格影响动画选择 / 行为参数
-- [ ] 进化分支（基础树）
-- [ ] 未婚离开 → 随机蛋 → 新世代循环
+- [x] `LifecycleStage` enum + `LifecycleTable`：egg/child/adult/elder/departed，按 active day 映射
+- [x] `LifecycleClock`：可配置的 activeSecondsPerDay（DEBUG 默认 20s/day，`NOTCHPET_DAY_SECONDS` 覆盖）
+- [x] `PetState` 扩展 ageActiveSeconds/stage/departedAt/personality/careHistory/generation
+- [x] `PersonalityTrait` 六种：活泼/害羞/高冷/贪吃/懒惰/暴躁，各带 body tint
+- [x] `CareHistory` 追踪 feed/play/rest 次数，child→adult 时 `derivePersonality` 决定主性格（12% 概率冷门变异）
+- [x] 世代循环：stage = .departed → 等 `departGraceSeconds` → `rebornAsNewGeneration()` 原地重置 PetState 字段（id/generation/vitals/history/stage 全部重来）
+- [x] `PetRenderer` 新增 egg / departed 专属绘制，child 版本缩小 1 像素，elder 整体 dim 到 0.85
+- [x] RoomView header 显示 name + 性格 tag + 阶段标签 + Gen 计数
+- [x] `ActionBar` 用 `petState.canInteract`（egg/departed/isAsleep 统一 disable）
+- [ ] **跳过**：配对、遗传、变异（完整流程在 Block 3+ 补做，MVP 先不做）
 
 ### Block 4 — 反馈与正式素材（未开工）
 
@@ -141,7 +146,31 @@ NotchPet/
 - 连拍 `/tmp/notchpet_frame_{1..4}.png`：呼吸偏移动画 ✓
 - 截图 `/tmp/notchpet_expanded_v5.png`：展开态房间 + 收起按钮 ✓
 
-### 2026-04-15 — Block 2 落地
+### 2026-04-15 — Block 3 落地
+
+**新增文件**：
+- `NotchPet/Pet/LifecycleStage.swift` — `LifecycleStage` enum + `LifecycleTable` age→stage 映射 + `LifecycleClock` day length 配置
+- `NotchPet/Pet/Personality.swift` — `PersonalityTrait` 六种 + body tint + `CareHistory` 计数 + `derivePersonality(rng:)` 决策规则
+
+**改写文件**：
+- `NotchPet/Pet/PetState.swift` — 加 ageActiveSeconds/stage/departedAt/personality/careHistory/generation 字段；`advanceLifecycle(activeSeconds:)` 驱动阶段机；`handleStageTransition` 在 child→adult 固化性格、进入 departed 时记时间戳；`rebornAsNewGeneration()` 原地重置全部字段；`canInteract` 统一门禁
+- `NotchPet/Pet/PetStateStore.swift` — schemaVersion bump 到 2，snapshot 覆盖所有新字段
+- `NotchPet/Pet/TimeService.swift` — tick 里额外调 `advanceLifecycle`；检查 .departed 阶段是否超过 grace window，超了就 `rebornAsNewGeneration` + 立即 save
+- `NotchPet/Pet/PetView.swift` — `PetRenderer.draw` 多接 `stage` 和 `personality`；egg / departed 用独立 pixel shape；child 版本整体下移 1 像素；elder 颜色 dim；性格 body tint 作用于 chick 期
+- `NotchPet/Room/RoomView.swift` — header 显示性格 tag + 阶段标签 + Gen 计数；ActionBar 用 `canInteract` 代替 `isAsleep`
+- `DEVELOPMENT_LOG.md` — 追加 Block 3 记录
+
+**自动化验证结果**：
+- `NOTCHPET_DAY_SECONDS=5` 让 10 天 = 50s，在 100s 内跑完 2+ 个完整世代
+- 启动 → 立刻展开 → 看到 たまご Day 0.1 的蛋 sprite（cream 色 + 棕色描边 + 3 个 speckle）✓
+- 等到 Day 4.8 → 幼年期 chick（缩小版）✓
+- 跑完整个循环：egg → child → adult → elder → departed → 新 egg (Gen 2+) ✓
+- 性格在未交互的情况下 fallback 到 "害羞"（符合 derivePersonality 规则 total<3 → shy）✓
+- state.json 最终 Gen=4，阶段机一路推进无卡死 ✓
+
+**已知小瑕疵（不 block）**：
+- 阶段标签和 ageDays 显示偶有 1 tick 的不一致，因为两个 @Published 在同一 tick 里先后更新；下个 block 或后续优化再处理
+- egg stage 的 RoomView 仍显示状态条和按钮（都 disabled），视觉上略冗余。Block 4 用正式素材替换时顺带重做蛋的 layout
 
 **新增文件**：
 - `NotchPet/Pet/PetStateStore.swift` — Codable `PetStateSnapshot` + `~/Library/Application Support/com.notchpet.NotchPet/state.json` 原子读写

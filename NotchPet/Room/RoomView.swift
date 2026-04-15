@@ -34,17 +34,50 @@ struct RoomView: View {
     }
 
     private var headerRow: some View {
-        HStack {
-            Text(petState.name)
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white)
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(petState.name)
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                    if let trait = petState.personality {
+                        Text(trait.displayName)
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(
+                                Capsule().fill(Color.white.opacity(0.12))
+                            )
+                    }
+                }
+                Text(Self.stageLabel(for: petState))
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
             Spacer()
-            Text(petState.isAsleep ? "おやすみ" : "げんき")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.6))
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Gen \(petState.generation)")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+                Text(petState.isAsleep ? "おやすみ" : "げんき")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
         }
         .padding(.horizontal, 18)
         .padding(.top, 14)
+    }
+
+    private static func stageLabel(for state: PetState) -> String {
+        let day = String(format: "%.1f", state.ageDays)
+        switch state.stage {
+        case .egg:      return "たまご · Day \(day)"
+        case .child:    return "幼年期 · Day \(day)"
+        case .adult:    return "成熟期 · Day \(day)"
+        case .elder:    return "老年期 · Day \(day)"
+        case .departed: return "告别 · Day \(day)"
+        }
     }
 }
 
@@ -120,8 +153,8 @@ private struct ActionBar: View {
             ActionButton(label: "玩耍", symbol: "🎈") { petState.play() }
             ActionButton(label: "休息", symbol: "💤") { petState.rest() }
         }
-        .disabled(petState.isAsleep)
-        .opacity(petState.isAsleep ? 0.35 : 1.0)
+        .disabled(!petState.canInteract)
+        .opacity(petState.canInteract ? 1.0 : 0.35)
     }
 }
 

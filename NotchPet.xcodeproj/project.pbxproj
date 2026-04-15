@@ -8,12 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89332AD3A71CB1B6C62FE845 /* NotchGeometry.swift */; };
+		4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */; };
 		571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */; };
 		5859B3040731092AA40DB3B3 /* TimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A117DA97C2A1F229BFF51271 /* TimeService.swift */; };
 		6D1FEB33E2BC451D86E8ECC9 /* RoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEABA289258E6E18698446C /* RoomView.swift */; };
 		7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5AA7B41C812CA4AFAF841B /* PetView.swift */; };
 		99217946E8B7E2FD5C35A81B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */; };
 		9B11623FDB832C6DB489D443 /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */; };
+		A05838EBE0D09E3EC0B8E133 /* Personality.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC64044CE5BC2F17F75FCCF2 /* Personality.swift */; };
 		AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A770D7343F9BA29AFD085A /* FirstMouseHostingView.swift */; };
 		AC70CAC810BB96CD850A41B9 /* NotchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */; };
 		AD6753DCC3ACCBCEBB9C49C2 /* NotchPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A932443E1C3B8C41164728B /* NotchPetApp.swift */; };
@@ -39,7 +41,9 @@
 		A117DA97C2A1F229BFF51271 /* TimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeService.swift; sourceTree = "<group>"; };
 		A2A770D7343F9BA29AFD085A /* FirstMouseHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstMouseHostingView.swift; sourceTree = "<group>"; };
 		ABD254F76D61401C7375893A /* NightSleep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightSleep.swift; sourceTree = "<group>"; };
+		AC64044CE5BC2F17F75FCCF2 /* Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Personality.swift; sourceTree = "<group>"; };
 		AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
+		B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleStage.swift; sourceTree = "<group>"; };
 		C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -69,7 +73,9 @@
 		5758709E64C99B398D024505 /* Pet */ = {
 			isa = PBXGroup;
 			children = (
+				B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */,
 				ABD254F76D61401C7375893A /* NightSleep.swift */,
+				AC64044CE5BC2F17F75FCCF2 /* Personality.swift */,
 				AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */,
 				69A361FEDC68AB778250C96F /* PetStateStore.swift */,
 				5F5AA7B41C812CA4AFAF841B /* PetView.swift */,
@@ -187,12 +193,14 @@
 			files = (
 				571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */,
 				AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */,
+				4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */,
 				E092B50345929D7B2A293145 /* NightSleep.swift in Sources */,
 				2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */,
 				AC70CAC810BB96CD850A41B9 /* NotchPanel.swift in Sources */,
 				D868041C33FC2B76B0BC1E9B /* NotchPanelController.swift in Sources */,
 				AD6753DCC3ACCBCEBB9C49C2 /* NotchPetApp.swift in Sources */,
 				DF0DE8BAA17AC347FC714E10 /* NotchRootView.swift in Sources */,
+				A05838EBE0D09E3EC0B8E133 /* Personality.swift in Sources */,
 				9B11623FDB832C6DB489D443 /* PetState.swift in Sources */,
 				C33F03FA77A95CBC8692CD24 /* PetStateStore.swift in Sources */,
 				7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */,
