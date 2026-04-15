@@ -1,25 +1,24 @@
 import SwiftUI
 
 /// Top-level view hosted inside the NotchPanel. Switches between the
-/// collapsed notch strip and the expanded room popover based on state.
+/// collapsed notch strip and the expanded room popover based on UI state.
+/// Collapse is driven by `NotchPanelController`'s global event monitors, so
+/// this view never calls collapse directly.
 struct NotchRootView: View {
-    @ObservedObject var state: NotchPanelState
-    /// Invoked when the user triggers a collapse inside SwiftUI (e.g. the
-    /// chevron button in RoomView). Collapsed-strip taps are handled at the
-    /// AppKit layer via `FirstMouseHostingView.onMouseDown`, not here.
-    let onCollapseRequested: () -> Void
+    @ObservedObject var uiState: NotchPanelState
+    @ObservedObject var petState: PetState
 
     var body: some View {
         ZStack {
-            if state.isExpanded {
-                RoomView(onCollapse: onCollapseRequested)
+            if uiState.isExpanded {
+                RoomView(petState: petState)
                     .transition(.opacity)
             } else {
-                CollapsedNotchView()
+                CollapsedNotchView(petState: petState)
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: state.isExpanded)
+        .animation(.easeInOut(duration: 0.25), value: uiState.isExpanded)
         .background(Color.black)
         .ignoresSafeArea()
     }
@@ -27,13 +26,14 @@ struct NotchRootView: View {
 
 /// Collapsed view sized to fit over the physical notch. Pure black background
 /// fuses it visually with the notch bezel; the pet sprite lives in the middle.
-/// This view has no tap gesture — AppKit mouseDown on the hosting view toggles
-/// the expand.
+/// No tap gesture — AppKit mouseDown on the hosting view drives expand.
 private struct CollapsedNotchView: View {
+    @ObservedObject var petState: PetState
+
     var body: some View {
         HStack(spacing: 0) {
             Spacer(minLength: 0)
-            PetView(size: 24)
+            PetView(size: 24, petState: petState)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

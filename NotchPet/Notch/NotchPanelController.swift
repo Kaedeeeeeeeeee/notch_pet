@@ -5,8 +5,12 @@ import Combine
 @MainActor
 final class NotchPanelController: NSObject {
     private let panel: NotchPanel
-    private let state = NotchPanelState()
+    private let uiState = NotchPanelState()
+    private let petState: PetState
     private var observers: [NSObjectProtocol] = []
+    private var globalEscMonitor: Any?
+    private var globalClickMonitor: Any?
+
     /// The built-in MacBook screen that physically owns the notch. Resolved
     /// once at init; re-resolved on screen change so external display
     /// reconfigurations keep the pet on the MacBook.
@@ -20,8 +24,9 @@ final class NotchPanelController: NSObject {
     /// Expanded frame shown below the notch (room popover).
     private let expandedSize = CGSize(width: 360, height: 420)
 
-    init(screen: NSScreen) {
+    init(screen: NSScreen, petState: PetState) {
         self.hostScreen = screen
+        self.petState = petState
         let initialSize = screen.notchSize ?? CGSize(width: 200, height: 32)
         let contentRect = NSRect(origin: .zero, size: initialSize)
         self.panel = NotchPanel(contentRect: contentRect)
@@ -32,6 +37,8 @@ final class NotchPanelController: NSObject {
 
     deinit {
         observers.forEach { NotificationCenter.default.removeObserver($0) }
+        if let m = globalEscMonitor { NSEvent.removeMonitor(m) }
+        if let m = globalClickMonitor { NSEvent.removeMonitor(m) }
     }
 
     func show() {
@@ -42,16 +49,15 @@ final class NotchPanelController: NSObject {
     // MARK: - Root view
 
     private func installRootView() {
-        let root = NotchRootView(state: state) { [weak self] in
-            self?.collapse()
-        }
+        let root = NotchRootView(uiState: uiState, petState: petState)
         let host = FirstMouseHostingView(rootView: root)
         host.autoresizingMask = [.width, .height]
         host.onMouseDown = { [weak self] in
             guard let self else { return }
             // Only the collapsed strip expands on bare clicks. When already
-            // expanded, SwiftUI buttons inside the room handle the click.
-            if !self.state.isExpanded {
+            // expanded, SwiftUI buttons inside the room handle the click via
+            // super.mouseDown → NSHostingView dispatch.
+            if !self.uiState.isExpanded {
                 self.expand()
             }
         }
@@ -60,23 +66,17 @@ final class NotchPanelController: NSObject {
 
     // MARK: - Expand / collapse
 
-    func toggle() {
-        if state.isExpanded {
-            collapse()
-        } else {
-            expand()
-        }
-    }
-
     func expand() {
-        guard !state.isExpanded else { return }
-        state.isExpanded = true
+        guard !uiState.isExpanded else { return }
+        uiState.isExpanded = true
         animateFrame(to: expandedFrame())
+        installDismissMonitors()
     }
 
     func collapse() {
-        guard state.isExpanded else { return }
-        state.isExpanded = false
+        guard uiState.isExpanded else { return }
+        removeDismissMonitors()
+        uiState.isExpanded = false
         animateFrame(to: collapsedFrame())
     }
 
@@ -85,6 +85,51 @@ final class NotchPanelController: NSObject {
             ctx.duration = 0.28
             ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             panel.animator().setFrame(frame, display: true)
+        }
+    }
+
+    // MARK: - Global dismiss monitors
+
+    /// Installs event monitors that close the expanded panel when the user
+    /// presses ESC or clicks anywhere outside the panel. `addGlobalMonitor`
+    /// only fires for events delivered to *other* apps, so clicks inside our
+    /// own non-activating panel don't trigger it — SwiftUI buttons still work.
+    private func installDismissMonitors() {
+        if globalEscMonitor == nil {
+            globalEscMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self else { return }
+                // virtualKey 53 = ESC
+                if event.keyCode == 53 {
+                    Task { @MainActor in self.collapse() }
+                }
+            }
+        }
+        if globalClickMonitor == nil {
+            globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+                guard let self else { return }
+                // `.nonactivatingPanel` clicks reach both our mouseDown
+                // override AND the global monitor. Hit-test against the
+                // panel's current frame so clicks inside the room don't
+                // trigger a collapse.
+                let location = NSEvent.mouseLocation  // screen coords
+                Task { @MainActor in
+                    if !self.panel.frame.contains(location) {
+                        self.collapse()
+                    }
+                }
+                _ = event
+            }
+        }
+    }
+
+    private func removeDismissMonitors() {
+        if let m = globalEscMonitor {
+            NSEvent.removeMonitor(m)
+            globalEscMonitor = nil
+        }
+        if let m = globalClickMonitor {
+            NSEvent.removeMonitor(m)
+            globalClickMonitor = nil
         }
     }
 
@@ -107,7 +152,7 @@ final class NotchPanelController: NSObject {
     }
 
     func reposition() {
-        let target = state.isExpanded ? expandedFrame() : collapsedFrame()
+        let target = uiState.isExpanded ? expandedFrame() : collapsedFrame()
         panel.setFrame(target, display: true)
     }
 
@@ -129,14 +174,6 @@ final class NotchPanelController: NSObject {
             }
         })
 
-        observers.append(nc.addObserver(
-            forName: .notchPanelRequestCollapse,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in self?.collapse() }
-        })
-
         let wsnc = NSWorkspace.shared.notificationCenter
         observers.append(wsnc.addObserver(
             forName: NSWorkspace.activeSpaceDidChangeNotification,
@@ -148,8 +185,8 @@ final class NotchPanelController: NSObject {
     }
 }
 
-/// Shared observable state passed into the SwiftUI root view so the controller
-/// can drive layout transitions without recreating the hosting view.
+/// Shared observable state for the panel's expand/collapse UI. Distinct from
+/// `PetState`, which owns the gameplay model.
 @MainActor
 final class NotchPanelState: ObservableObject {
     @Published var isExpanded: Bool = false

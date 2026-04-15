@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**Block 1 代码完成，等待用户手动验收** + Aseprite CLI 后台编译中
+**Block 2 完成**：状态模型 + 时间服务 + 持久化 + 真实 RoomView + 夜间睡眠 + 全局 dismiss 监听。Block 3 进行中。
 
 ---
 
@@ -64,14 +64,16 @@
 - [x] `build.sh --auto --norun` 编译完成（1562 目标，约 3 分钟）
 - [x] 验证：`tools/aseprite/build/bin/aseprite --version` → `Aseprite 1.x-dev`
 
-### Block 2 — 状态与时间（未开工）
+### Block 2 — 状态与时间 ✅
 
-- [ ] `PetState` 完整模型：饱腹度 / 心情 / 体力 + 衰减
-- [ ] `TimeService`：绑定电脑活跃时间（`NSWorkspace` 休眠/唤醒/锁屏）
-- [ ] 夜间睡眠时段（21:00~22:00 起，可配置）
-- [ ] `RoomView` 补真实状态条 + 喂食/玩耍/休息按钮
-- [ ] 状态 → 刘海态动画反馈（饿/开心/病）
-- [ ] 持久化（`UserDefaults` 或 JSON）
+- [x] `PetState` 完整模型：hunger / mood / energy + applyDecay(activeSeconds:)
+- [x] `TimeService`：1 Hz tick + NSWorkspace willSleep/didWake/screensDidSleep/screensDidWake/sessionResign/sessionBecome 暂停-恢复
+- [x] 夜间睡眠时段（21:00~09:00 本地固定，Block 3 由性格影响）
+- [x] `RoomView` 真实状态条 + 喂食/玩耍/休息按钮 + 夜间 Zzz 蒙层
+- [x] `PetView` 按状态切模式（idle / hungry / sleeping），hungry 头顶冒 `!`，sleeping 眼睛闭上 + 身后 Z
+- [x] JSON 持久化到 `~/Library/Application Support/com.notchpet.NotchPet/state.json`
+- [x] DEBUG 模式 30x decay 加速（`NOTCHPET_DECAY_SPEEDUP` env 覆盖）
+- [x] ESC + 点击面板外部自动收起（`NSEvent.addGlobalMonitorForEvents`，监听回调做面板命中测试避免面板内点击被误判）
 
 ### Block 3 — 生命周期 & 性格（未开工）
 
@@ -138,6 +140,36 @@ NotchPet/
 - 截图 `/tmp/notchpet_collapsed_v2.png`：刘海里的小鸡 ✓
 - 连拍 `/tmp/notchpet_frame_{1..4}.png`：呼吸偏移动画 ✓
 - 截图 `/tmp/notchpet_expanded_v5.png`：展开态房间 + 收起按钮 ✓
+
+### 2026-04-15 — Block 2 落地
+
+**新增文件**：
+- `NotchPet/Pet/PetStateStore.swift` — Codable `PetStateSnapshot` + `~/Library/Application Support/com.notchpet.NotchPet/state.json` 原子读写
+- `NotchPet/Pet/TimeService.swift` — 1Hz Timer + NSWorkspace 休眠/唤醒/会话观察者；tick 里计算 `activeSeconds` delta 交给 `PetState.applyDecay`，每 30s save 一次
+- `NotchPet/Pet/NightSleep.swift` — `NightSleepSchedule` 判断当前时间是否处于夜间窗口（跨午夜正确）
+
+**改写文件**：
+- `NotchPet/Pet/PetState.swift` — 从 struct stub 改成 `final class: ObservableObject`：`@Published hunger/mood/energy/isAsleep/lastTickAt`；`feed()` / `play()` / `rest()` 动作；`applyDecay(activeSeconds:)` 按 fast(energy 2h) / medium(hunger 4h) / slow(mood 8h) 衰减；DEBUG 模式 30x 倍速
+- `NotchPet/Room/RoomView.swift` — 重写：header 显示名字 + 状态、真实 `VitalsStrip` 三条胶囊 bar、`ActionBar` 三按钮（emoji icon + 像素风边框）、`SleepOverlay` 夜间蒙层
+- `NotchPet/Pet/PetView.swift` — 接受 `petState`，按 `PetMode.idle/hungry/sleeping` 切渲染；`hungry` 头顶冒橙色 `!`；`sleeping` 眼睛线条化 + 身后飘 Z
+- `NotchPet/Notch/NotchPanelController.swift` — 构造加 petState 参数；`expand()` 装全局 ESC + 点击监听，`collapse()` 摘；监听回调做 `panel.frame.contains(NSEvent.mouseLocation)` 命中测试，面板内点击不误触发
+- `NotchPet/Notch/NotchPanel.swift` — 删掉之前死代码的 `cancelOperation` + `.notchPanelRequestCollapse` 通知链路
+- `NotchPet/Notch/NotchRootView.swift` — 接受 `petState` 并传给 collapsed 和 room 分支
+- `NotchPet/AppDelegate.swift` — 装配 store/petState/timeService/controller 四件套；`applicationWillTerminate` 调 `timeService.flush()` 保底持久化
+
+**踩的坑**：
+
+1. **`.nonactivatingPanel` 上点击同时到达 AppKit mouseDown 和 global event monitor**：这是我之前以为不会发生的情况。Apple 的 "global monitor 只看发给其他 app 的事件" 对非激活 panel 不成立——非激活 panel 的点击同时被我们的 mouseDown 处理 + 在 global monitor 里以"发给其他 app"的名义再次触发。修复是 global click 监听的回调里用 `panel.frame.contains(NSEvent.mouseLocation)` 判断命中，点击面板内就忽略。
+
+2. **Swift 6 actor isolation**：`PetState` 是 `@MainActor`，`PetStateSnapshot.init(from:)` 读它的属性时默认是非 isolated 上下文，编译报错。修复是给 `init(from:)` 和 `materialize()` 都加 `@MainActor` 标注。类似地 `PetStateStore.currentSchema` 也加 `nonisolated static let` 避免初始化器里访问报错。
+
+**自动化验证结果**：
+- 启动 → 点击刘海展开 → 看到 3 条 70% 初始 bar ✓
+- 点击喂食按钮 3 次 → おなか 从 70 升到 100 ✓
+- 点击面板外部区域（y=600）→ 收起 ✓
+- `state.json` 正确写入 ✓
+- kill + relaunch → 载入持久化状态（hunger 87, mood 78, energy 44）✓
+- ESC 收起（用户手动确认）✓
 
 ### Aseprite 使用笔记（build 成功后补充命令）
 

@@ -2,15 +2,32 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panelController: NotchPanelController?
+    private var petState: PetState?
+    private var store: PetStateStore?
+    private var timeService: TimeService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let screen = NSScreen.builtInNotchedScreen, screen.notchSize != nil else {
             presentNoNotchAlertAndQuit()
             return
         }
-        let controller = NotchPanelController(screen: screen)
+
+        let store = PetStateStore()
+        let petState = store.load()
+        let timeService = TimeService(petState: petState, store: store)
+
+        let controller = NotchPanelController(screen: screen, petState: petState)
         controller.show()
+        timeService.start()
+
+        self.store = store
+        self.petState = petState
+        self.timeService = timeService
         self.panelController = controller
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        timeService?.flush()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

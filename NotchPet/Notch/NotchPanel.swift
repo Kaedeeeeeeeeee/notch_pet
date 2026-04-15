@@ -35,13 +35,4 @@ final class NotchPanel: NSPanel {
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
-
-    override func cancelOperation(_ sender: Any?) {
-        // ESC — forwarded to controller via notification
-        NotificationCenter.default.post(name: .notchPanelRequestCollapse, object: self)
-    }
-}
-
-extension Notification.Name {
-    static let notchPanelRequestCollapse = Notification.Name("NotchPanelRequestCollapse")
 }
