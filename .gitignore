@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# XcodeGen-generated project (we regenerate from project.yml)
+# Uncomment the next line if you'd rather not commit the .xcodeproj:
+# *.xcodeproj/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+
+# Aseprite (source build output, not committed)
+tools/aseprite/
+
+# Claude local
+.claude/
