@@ -16,13 +16,28 @@ final class NotchPanelController: NSObject {
     /// reconfigurations keep the pet on the MacBook.
     private var hostScreen: NSScreen
 
-    /// Collapsed frame shown in the notch itself.
+    /// Collapsed frame shown over the notch. We extend the physical notch
+    /// down by `notchExtensionBelow` points so there's room to curve the
+    /// bottom corners below the real cutout — otherwise the rounding has
+    /// nowhere to live. The extra height lives on the menu bar directly
+    /// below the notch, which is empty in practice.
     private var collapsedSize: CGSize {
-        hostScreen.notchSize ?? CGSize(width: 200, height: 32)
+        let notch = hostScreen.notchSize ?? CGSize(width: 200, height: 32)
+        return CGSize(width: notch.width, height: notch.height + Self.notchExtensionBelow)
     }
 
     /// Expanded frame shown below the notch (room popover).
-    private let expandedSize = CGSize(width: 360, height: 420)
+    private let expandedSize = CGSize(width: 360, height: 460)
+
+    /// How many points the panel extends below the physical notch cut-out.
+    /// The bottom `notchExtensionBelow` points is where the rounded corners
+    /// live; anything higher sits inside the real notch cavity.
+    static let notchExtensionBelow: CGFloat = 16
+    /// Height of the physical notch, used by SwiftUI subviews that want to
+    /// position content inside the cavity vs the extension below it.
+    var notchCavityHeight: CGFloat {
+        hostScreen.notchSize?.height ?? 32
+    }
 
     init(screen: NSScreen, petState: PetState) {
         self.hostScreen = screen
@@ -49,7 +64,11 @@ final class NotchPanelController: NSObject {
     // MARK: - Root view
 
     private func installRootView() {
-        let root = NotchRootView(uiState: uiState, petState: petState)
+        let root = NotchRootView(
+            uiState: uiState,
+            petState: petState,
+            cavityHeight: notchCavityHeight
+        )
         let host = FirstMouseHostingView(rootView: root)
         host.autoresizingMask = [.width, .height]
         host.onMouseDown = { [weak self] in

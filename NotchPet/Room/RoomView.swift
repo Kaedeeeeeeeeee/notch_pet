@@ -83,18 +83,18 @@ struct RoomView: View {
 
 private struct RoomBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.11, green: 0.08, blue: 0.18),
-                Color(red: 0.22, green: 0.14, blue: 0.28)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color(red: 0.35, green: 0.22, blue: 0.15))
-                .frame(height: 60)
+        ZStack {
+            Color.black
+            // Very subtle pixel floor line so the room still reads as a
+            // "space" rather than a featureless void. Kept at ~4% white so
+            // it's barely there.
+            VStack(spacing: 0) {
+                Spacer()
+                Rectangle()
+                    .fill(Color.white.opacity(0.04))
+                    .frame(height: 1)
+                    .padding(.bottom, 70)
+            }
         }
     }
 }

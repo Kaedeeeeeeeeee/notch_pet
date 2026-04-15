@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**Block 3 完成**：生命周期阶段机（egg/child/adult/elder/departed）+ 性格系统（基于 care history 衍生）+ 世代循环（departed → 新蛋 → 新世代）。
+**视觉升级完成**：折叠态改为刘海左侧显示宠物 + 右侧状态图标、底部圆角匹配 MacBook 物理刘海；展开态改为纯黑背景 + 底部圆角；像素宠物重画以支持 highlight / belly shading / 翅膀 / 更表情化的眼睛。Block 3 之前的状态机 + 生命周期 + 持久化都保留。
 
 ---
 
@@ -145,6 +145,38 @@ NotchPet/
 - 截图 `/tmp/notchpet_collapsed_v2.png`：刘海里的小鸡 ✓
 - 连拍 `/tmp/notchpet_frame_{1..4}.png`：呼吸偏移动画 ✓
 - 截图 `/tmp/notchpet_expanded_v5.png`：展开态房间 + 收起按钮 ✓
+
+### 2026-04-15 — 视觉升级（收尾用户反馈）
+
+用户反馈要点：
+1. 刘海折叠态宠物太大，且居中覆盖整个刘海——改成小尺寸 + 放在刘海左侧
+2. 刘海右侧放状态提示，没事黑着，饿了/累了/无心情时显示对应图标
+3. 折叠态面板下方两个角是直角太丑，需要和 MacBook 物理刘海一样的圆角
+4. 展开态背景要改为黑色（和刘海视觉连贯）
+5. 展开态下方两个角也需要圆角
+6. 宠物本身的像素美术可以做得更精细
+
+**改动**：
+
+- `NotchPet/Notch/NotchPanelController.swift` — collapsed size 从 `notchWidth × notchHeight` 改为 `notchWidth × (notchHeight + 16)`；多出的 16pt 在刘海下方用来放圆角。新增 `notchCavityHeight` 传给 SwiftUI 用于 cavity 内对齐。expanded 尺寸 420 → 460 高度一点点。
+- `NotchPet/Notch/NotchRootView.swift` — 
+  - 新增 `NotchClipShape`（基于 `UnevenRoundedRectangle`），只圆下方两个角。folded 时 12pt 半径，expanded 时 18pt 半径。
+  - `CollapsedNotchView` 用 `HStack(alignment: .top)` 把宠物放左、状态图标放右，中间 Spacer 保持纯黑。pet/icon 根据 `cavityHeight` 手动 top-padding 使其垂直居中在刘海 cavity 内，而不是整个 panel（包含圆角突出区域）。
+  - 新增 `StatusIconView` 决定当前状态图标：lifecycle 最高优先（egg→无、departed→👋），然后 `isAsleep`→💤，然后 vitals < 0.30 的最严重项用 🍚/⚡️/💔。阈值 0.30 比 PetView 的 0.25 稍早触发，让刘海态比宠物身上的 `!` 气泡更早报警。
+- `NotchPet/Room/RoomView.swift` — `RoomBackground` 去掉紫色渐变和棕色地板条，改为纯 `Color.black` + 一条 4% 白的极淡地板线。头部 padding 不变。
+- `NotchPet/Pet/PetView.swift` — 彻底重画 `chickShape`：
+  - 16×16 grid 不变，但 cell 编码从 3 种（outline/body/空）扩展到 10 种（body/outline/highlight/belly/beak/eye-white/eye-pupil/cheek/wing）
+  - 身体上方加 highlight 行（1.00r/0.95g/0.60b 的亮黄），下方加 belly 行（深一点的芥末黄），形成微立体感
+  - 眼睛变成 2-pixel 宽的白色 + 黑瞳组合
+  - 三角形喙：row 5 开始 2 格基底 + row 6 2 格尾端
+  - 右侧加 wing 色块（3 像素，更暗的黄）
+  - 脸颊下移到 row 6（跟眼睛同高），blink 时 overwrite 成 body 色消失
+  - 所有颜色都走 `tint * dim` 乘算，personality 和 elder 的视觉差异仍然生效
+
+**自动化验证**：
+- 折叠态（child/adult，饱腹度正常）：左小鸡 + 右黑 + 下方圆角 ✓
+- 折叠态（hunger=0.10 预埋）：左小鸡头顶冒 `!` + 右边 🍚 图标 + 下方圆角 ✓
+- 展开态（adult + cheerful）：黑底 + 下方圆角 + 细节 chick sprite + header 显示「ひよこ 活泼 · Gen 1 · 成熟期 Day 7.0 · げんき」 ✓
 
 ### 2026-04-15 — Block 3 落地
 
