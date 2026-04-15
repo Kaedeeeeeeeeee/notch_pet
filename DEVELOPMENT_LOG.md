@@ -57,12 +57,12 @@
 - [ ] 手动：跨 Space / 全屏切换 / 休眠唤醒后窗口仍在（用户本地验证）
 - [ ] 手动：外接屏为主屏时，宠物在 MBP 内建屏的刘海上（目前的使用场景就是这个，已自动验证）
 
-**5. Aseprite CLI（为 Block 2 铺路）**
+**5. Aseprite CLI（为 Block 2 铺路）** ✅
 - [x] clone aseprite 源码到 `tools/aseprite/`
 - [x] `brew install ninja`
 - [x] Skia m124 预编译包已自动下载到 `.deps/skia-m124`（由 `build.sh` 处理）
-- [ ] `build.sh --auto --norun` cmake configure + ninja 编译中（后台 pid 66386，~10-30 min）
-- [ ] 验证 `tools/aseprite/build/bin/aseprite --version`
+- [x] `build.sh --auto --norun` 编译完成（1562 目标，约 3 分钟）
+- [x] 验证：`tools/aseprite/build/bin/aseprite --version` → `Aseprite 1.x-dev`
 
 ### Block 2 — 状态与时间（未开工）
 
