@@ -7,21 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09DF0DCBADC938A360517A3E /* PlayerInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFDD4D9F8925CC3F674BEB5 /* PlayerInventory.swift */; };
+		0C9CE880F43AE5DFD287FD41 /* FurnitureSpriteLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C767F57F0E65884D6B3793BB /* FurnitureSpriteLibrary.swift */; };
+		0ECAB06FFF469D318E1E0CDF /* RoomTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D14B9A7BDA4D2F49F379871 /* RoomTheme.swift */; };
 		10925B542627B159CAEFE445 /* ActionIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464970C6F894F925C1B474F9 /* ActionIconView.swift */; };
+		2657673194451E44F486BB13 /* ActionAnimationOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF7EC5F3F9178B5800550FC /* ActionAnimationOverlay.swift */; };
 		2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89332AD3A71CB1B6C62FE845 /* NotchGeometry.swift */; };
+		40AD5CFCC1A3BBDAF99F05EF /* InventoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45A1C9199787FDEBB0BC843 /* InventoryStore.swift */; };
 		4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */; };
+		50585BA54C67F3911B6F16F2 /* PoopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46CF8B0FB3906BC908CB2ECB /* PoopView.swift */; };
 		571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */; };
 		5859B3040731092AA40DB3B3 /* TimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A117DA97C2A1F229BFF51271 /* TimeService.swift */; };
+		6B72C56154DE778495D54EA9 /* HeartsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1E0640FEBB356A3052019 /* HeartsRow.swift */; };
 		6D1FEB33E2BC451D86E8ECC9 /* RoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEABA289258E6E18698446C /* RoomView.swift */; };
 		7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5AA7B41C812CA4AFAF841B /* PetView.swift */; };
+		77C8E7CA8FA67FBD64868D34 /* Audio in Resources */ = {isa = PBXBuildFile; fileRef = EF6B33D52A313769168D692A /* Audio */; };
+		98EF6B333EF80A7B74EAB89A /* Sprites in Resources */ = {isa = PBXBuildFile; fileRef = A8E9D617AF607DC7B272FF6F /* Sprites */; };
 		99217946E8B7E2FD5C35A81B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */; };
 		9B11623FDB832C6DB489D443 /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */; };
 		A05838EBE0D09E3EC0B8E133 /* Personality.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC64044CE5BC2F17F75FCCF2 /* Personality.swift */; };
+		A44DCED6E49C493C23551C47 /* PetSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC6D998DCE8FD1D1ABB9B49 /* PetSprite.swift */; };
+		A7DBDAE2F9D7F5B895BC591B /* StatusIconPixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD02ACD20394891F9780D59C /* StatusIconPixelView.swift */; };
 		AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A770D7343F9BA29AFD085A /* FirstMouseHostingView.swift */; };
 		AC70CAC810BB96CD850A41B9 /* NotchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */; };
 		AD6753DCC3ACCBCEBB9C49C2 /* NotchPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A932443E1C3B8C41164728B /* NotchPetApp.swift */; };
+		B4E0951C58178603F9906CE1 /* PersonalityBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = E374AE18062D2E69651C1286 /* PersonalityBehavior.swift */; };
+		B64E10A7B3F4D8577A3AE6D6 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A8B47465D8AB8DA7B83065 /* AppSettings.swift */; };
+		BB97D979818A67DA8EF17236 /* FurnitureCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D30AEA7CFEEACE4E8CDE963F /* FurnitureCatalog.swift */; };
+		BCFB5B4A403ABC888E6D4C4E /* PetBehaviorEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB9695E69917F15ECDCBE56 /* PetBehaviorEngine.swift */; };
+		BE95E98A82A334405FE82259 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212F2B12C0DB1CA92329401A /* SoundPlayer.swift */; };
 		C33F03FA77A95CBC8692CD24 /* PetStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A361FEDC68AB778250C96F /* PetStateStore.swift */; };
+		D30A9F7486645997587236F7 /* ManagementPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F0AA55030B7F057AA7C77 /* ManagementPanel.swift */; };
 		D868041C33FC2B76B0BC1E9B /* NotchPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44852ED00B2C856AC36383F8 /* NotchPanelController.swift */; };
+		D90328AFFECE54B265E949BC /* HeaderIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C600840FE0220DA068AE4 /* HeaderIconView.swift */; };
 		DF0DE8BAA17AC347FC714E10 /* NotchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E72747044D897EF0B9EDC54 /* NotchRootView.swift */; };
 		E092B50345929D7B2A293145 /* NightSleep.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD254F76D61401C7375893A /* NightSleep.swift */; };
 /* End PBXBuildFile section */
@@ -29,27 +47,57 @@
 /* Begin PBXFileReference section */
 		0A932443E1C3B8C41164728B /* NotchPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPetApp.swift; sourceTree = "<group>"; };
 		0E72747044D897EF0B9EDC54 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
+		212F2B12C0DB1CA92329401A /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		27F84C91E830F0E76A9B1F1D /* NotchPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		39E1E0640FEBB356A3052019 /* HeartsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartsRow.swift; sourceTree = "<group>"; };
 		44852ED00B2C856AC36383F8 /* NotchPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanelController.swift; sourceTree = "<group>"; };
 		464970C6F894F925C1B474F9 /* ActionIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionIconView.swift; sourceTree = "<group>"; };
+		46CF8B0FB3906BC908CB2ECB /* PoopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoopView.swift; sourceTree = "<group>"; };
+		4B6C600840FE0220DA068AE4 /* HeaderIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderIconView.swift; sourceTree = "<group>"; };
+		4D14B9A7BDA4D2F49F379871 /* RoomTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomTheme.swift; sourceTree = "<group>"; };
 		5F5AA7B41C812CA4AFAF841B /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
+		5FF7EC5F3F9178B5800550FC /* ActionAnimationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionAnimationOverlay.swift; sourceTree = "<group>"; };
+		63A8B47465D8AB8DA7B83065 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		69A361FEDC68AB778250C96F /* PetStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetStateStore.swift; sourceTree = "<group>"; };
+		6FC6D998DCE8FD1D1ABB9B49 /* PetSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetSprite.swift; sourceTree = "<group>"; };
 		7AEABA289258E6E18698446C /* RoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomView.swift; sourceTree = "<group>"; };
 		7B0AF2862573BC56FC026DB9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		89332AD3A71CB1B6C62FE845 /* NotchGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGeometry.swift; sourceTree = "<group>"; };
 		98486A2E4A6ABE18B5838654 /* NotchPet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchPet.entitlements; sourceTree = "<group>"; };
+		9C3F0AA55030B7F057AA7C77 /* ManagementPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagementPanel.swift; sourceTree = "<group>"; };
 		A117DA97C2A1F229BFF51271 /* TimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeService.swift; sourceTree = "<group>"; };
 		A2A770D7343F9BA29AFD085A /* FirstMouseHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstMouseHostingView.swift; sourceTree = "<group>"; };
+		A8E9D617AF607DC7B272FF6F /* Sprites */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sprites; path = NotchPet/Assets/Sprites; sourceTree = SOURCE_ROOT; };
 		ABD254F76D61401C7375893A /* NightSleep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightSleep.swift; sourceTree = "<group>"; };
 		AC64044CE5BC2F17F75FCCF2 /* Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Personality.swift; sourceTree = "<group>"; };
 		AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
 		B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleStage.swift; sourceTree = "<group>"; };
+		BD02ACD20394891F9780D59C /* StatusIconPixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusIconPixelView.swift; sourceTree = "<group>"; };
 		C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanel.swift; sourceTree = "<group>"; };
+		C767F57F0E65884D6B3793BB /* FurnitureSpriteLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FurnitureSpriteLibrary.swift; sourceTree = "<group>"; };
+		D30AEA7CFEEACE4E8CDE963F /* FurnitureCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FurnitureCatalog.swift; sourceTree = "<group>"; };
+		DDFDD4D9F8925CC3F674BEB5 /* PlayerInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerInventory.swift; sourceTree = "<group>"; };
+		E374AE18062D2E69651C1286 /* PersonalityBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalityBehavior.swift; sourceTree = "<group>"; };
+		E45A1C9199787FDEBB0BC843 /* InventoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryStore.swift; sourceTree = "<group>"; };
+		EEB9695E69917F15ECDCBE56 /* PetBehaviorEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetBehaviorEngine.swift; sourceTree = "<group>"; };
+		EF6B33D52A313769168D692A /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = NotchPet/Assets/Audio; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		215DB12C6BAB048E1B35C813 /* Inventory */ = {
+			isa = PBXGroup;
+			children = (
+				D30AEA7CFEEACE4E8CDE963F /* FurnitureCatalog.swift */,
+				C767F57F0E65884D6B3793BB /* FurnitureSpriteLibrary.swift */,
+				E45A1C9199787FDEBB0BC843 /* InventoryStore.swift */,
+				DDFDD4D9F8925CC3F674BEB5 /* PlayerInventory.swift */,
+				4D14B9A7BDA4D2F49F379871 /* RoomTheme.swift */,
+			);
+			path = Inventory;
+			sourceTree = "<group>";
+		};
 		35AEE66FE43596EF90105CF7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -62,8 +110,12 @@
 			isa = PBXGroup;
 			children = (
 				7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */,
+				63A8B47465D8AB8DA7B83065 /* AppSettings.swift */,
 				7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */,
 				0A932443E1C3B8C41164728B /* NotchPetApp.swift */,
+				875A6E45108DBC600FEC7D40 /* Assets */,
+				C729E8B67F21B70EA3906D17 /* Audio */,
+				215DB12C6BAB048E1B35C813 /* Inventory */,
 				D3BF52C11C43E77047A32874 /* Notch */,
 				5758709E64C99B398D024505 /* Pet */,
 				8816EAD5756683445B70DFAF /* Resources */,
@@ -78,12 +130,24 @@
 				B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */,
 				ABD254F76D61401C7375893A /* NightSleep.swift */,
 				AC64044CE5BC2F17F75FCCF2 /* Personality.swift */,
+				E374AE18062D2E69651C1286 /* PersonalityBehavior.swift */,
+				EEB9695E69917F15ECDCBE56 /* PetBehaviorEngine.swift */,
+				6FC6D998DCE8FD1D1ABB9B49 /* PetSprite.swift */,
 				AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */,
 				69A361FEDC68AB778250C96F /* PetStateStore.swift */,
 				5F5AA7B41C812CA4AFAF841B /* PetView.swift */,
 				A117DA97C2A1F229BFF51271 /* TimeService.swift */,
 			);
 			path = Pet;
+			sourceTree = "<group>";
+		};
+		875A6E45108DBC600FEC7D40 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				EF6B33D52A313769168D692A /* Audio */,
+				A8E9D617AF607DC7B272FF6F /* Sprites */,
+			);
+			path = Assets;
 			sourceTree = "<group>";
 		};
 		8816EAD5756683445B70DFAF /* Resources */ = {
@@ -98,10 +162,23 @@
 		A81D7CB0BC76E71DF9ADEB97 /* Room */ = {
 			isa = PBXGroup;
 			children = (
+				5FF7EC5F3F9178B5800550FC /* ActionAnimationOverlay.swift */,
 				464970C6F894F925C1B474F9 /* ActionIconView.swift */,
+				4B6C600840FE0220DA068AE4 /* HeaderIconView.swift */,
+				39E1E0640FEBB356A3052019 /* HeartsRow.swift */,
+				9C3F0AA55030B7F057AA7C77 /* ManagementPanel.swift */,
+				46CF8B0FB3906BC908CB2ECB /* PoopView.swift */,
 				7AEABA289258E6E18698446C /* RoomView.swift */,
 			);
 			path = Room;
+			sourceTree = "<group>";
+		};
+		C729E8B67F21B70EA3906D17 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				212F2B12C0DB1CA92329401A /* SoundPlayer.swift */,
+			);
+			path = Audio;
 			sourceTree = "<group>";
 		};
 		D3BF52C11C43E77047A32874 /* Notch */ = {
@@ -112,6 +189,7 @@
 				C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */,
 				44852ED00B2C856AC36383F8 /* NotchPanelController.swift */,
 				0E72747044D897EF0B9EDC54 /* NotchRootView.swift */,
+				BD02ACD20394891F9780D59C /* StatusIconPixelView.swift */,
 			);
 			path = Notch;
 			sourceTree = "<group>";
@@ -184,6 +262,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				99217946E8B7E2FD5C35A81B /* Assets.xcassets in Resources */,
+				77C8E7CA8FA67FBD64868D34 /* Audio in Resources */,
+				98EF6B333EF80A7B74EAB89A /* Sprites in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -194,10 +274,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2657673194451E44F486BB13 /* ActionAnimationOverlay.swift in Sources */,
 				10925B542627B159CAEFE445 /* ActionIconView.swift in Sources */,
 				571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */,
+				B64E10A7B3F4D8577A3AE6D6 /* AppSettings.swift in Sources */,
 				AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */,
+				BB97D979818A67DA8EF17236 /* FurnitureCatalog.swift in Sources */,
+				0C9CE880F43AE5DFD287FD41 /* FurnitureSpriteLibrary.swift in Sources */,
+				D90328AFFECE54B265E949BC /* HeaderIconView.swift in Sources */,
+				6B72C56154DE778495D54EA9 /* HeartsRow.swift in Sources */,
+				40AD5CFCC1A3BBDAF99F05EF /* InventoryStore.swift in Sources */,
 				4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */,
+				D30A9F7486645997587236F7 /* ManagementPanel.swift in Sources */,
 				E092B50345929D7B2A293145 /* NightSleep.swift in Sources */,
 				2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */,
 				AC70CAC810BB96CD850A41B9 /* NotchPanel.swift in Sources */,
@@ -205,10 +293,18 @@
 				AD6753DCC3ACCBCEBB9C49C2 /* NotchPetApp.swift in Sources */,
 				DF0DE8BAA17AC347FC714E10 /* NotchRootView.swift in Sources */,
 				A05838EBE0D09E3EC0B8E133 /* Personality.swift in Sources */,
+				B4E0951C58178603F9906CE1 /* PersonalityBehavior.swift in Sources */,
+				BCFB5B4A403ABC888E6D4C4E /* PetBehaviorEngine.swift in Sources */,
+				A44DCED6E49C493C23551C47 /* PetSprite.swift in Sources */,
 				9B11623FDB832C6DB489D443 /* PetState.swift in Sources */,
 				C33F03FA77A95CBC8692CD24 /* PetStateStore.swift in Sources */,
 				7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */,
+				09DF0DCBADC938A360517A3E /* PlayerInventory.swift in Sources */,
+				50585BA54C67F3911B6F16F2 /* PoopView.swift in Sources */,
+				0ECAB06FFF469D318E1E0CDF /* RoomTheme.swift in Sources */,
 				6D1FEB33E2BC451D86E8ECC9 /* RoomView.swift in Sources */,
+				BE95E98A82A334405FE82259 /* SoundPlayer.swift in Sources */,
+				A7DBDAE2F9D7F5B895BC591B /* StatusIconPixelView.swift in Sources */,
 				5859B3040731092AA40DB3B3 /* TimeService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

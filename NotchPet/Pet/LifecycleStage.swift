@@ -1,15 +1,15 @@
 import Foundation
 
-/// Coarse life-cycle stages used by the pet MVP. The design doc's ten-day
-/// marriage/baby/farewell flow is compressed for Block 3: without pairing we
-/// lose the baby step on Day 9, so the adult phase extends straight into
-/// elder and then depart. A new generation respawns automatically.
+/// Coarse life-cycle stages. Elder is open-ended: a well-cared-for pet
+/// lives indefinitely. Departed is triggered only by sustained neglect
+/// during the elder stage (hunger/happy at zero too long, or untreated
+/// sickness). A new generation respawns automatically after departure.
 enum LifecycleStage: String, Codable {
     case egg        // Day 0.0 – 0.5
     case child      // Day 0.5 – 5.0  (growing, personality still malleable)
     case adult      // Day 5.0 – 8.0  (mature, personality fixed)
-    case elder      // Day 8.0 – 10.0 (slowing down)
-    case departed   // Day 10.0+      (farewell, brief window before respawn)
+    case elder      // Day 8.0+       (fragile, needs careful care)
+    case departed   // neglect death   (farewell, brief window before respawn)
 }
 
 /// Maps an age in active days to the current lifecycle stage.
@@ -17,15 +17,13 @@ struct LifecycleTable {
     var eggHatchDay: Double = 0.5
     var childToAdultDay: Double = 5.0
     var adultToElderDay: Double = 8.0
-    var elderToDepartDay: Double = 10.0
 
     func stage(forAgeDays age: Double) -> LifecycleStage {
         switch age {
         case ..<eggHatchDay:        return .egg
         case ..<childToAdultDay:    return .child
         case ..<adultToElderDay:    return .adult
-        case ..<elderToDepartDay:   return .elder
-        default:                    return .departed
+        default:                    return .elder
         }
     }
 }

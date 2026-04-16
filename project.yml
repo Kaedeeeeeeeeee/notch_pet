@@ -20,6 +20,15 @@ targets:
     deploymentTarget: "15.0"
     sources:
       - path: NotchPet
+        excludes:
+          - "Assets/Sprites/**"
+          - "Assets/Audio/**"
+      - path: NotchPet/Assets/Sprites
+        type: folder
+        buildPhase: resources
+      - path: NotchPet/Assets/Audio
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.notchpet.NotchPet

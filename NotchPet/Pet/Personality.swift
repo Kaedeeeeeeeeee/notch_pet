@@ -24,18 +24,10 @@ enum PersonalityTrait: String, Codable, CaseIterable {
         }
     }
 
-    /// Tint multiplier applied to the chick body color to make the trait
-    /// legible at a glance on the collapsed strip.
-    var bodyTint: (r: Double, g: Double, b: Double) {
-        switch self {
-        case .cheerful:   return (1.10, 1.05, 1.00)   // warm brighter
-        case .shy:        return (1.00, 1.00, 1.10)   // faint blue
-        case .aloof:      return (0.85, 0.95, 1.10)   // cooler
-        case .gluttonous: return (1.10, 0.95, 0.85)   // ruddier
-        case .lazy:       return (0.90, 0.90, 0.90)   // muted
-        case .grumpy:     return (1.15, 0.85, 0.85)   // reddish
-        }
-    }
+    /// Tag name used in the spritesheet for this personality's expression
+    /// variant. Matches the segment emitted by `gen_pet.lua`.
+    /// Note: body tints are now baked into the sprite generation script
+    /// (very subtle per-personality), not applied at runtime.
 }
 
 /// Counters that record how the user cared for the pet while it was a child.

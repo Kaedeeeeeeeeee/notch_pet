@@ -8,7 +8,7 @@ struct ActionIconView: View {
     let size: CGFloat
 
     enum Kind {
-        case feed, play, rest
+        case feed, play, rest, medicine, clean
     }
 
     var body: some View {
@@ -41,6 +41,8 @@ struct ActionIconView: View {
         case .feed: return Self.feedPixels
         case .play: return Self.playPixels
         case .rest: return Self.restPixels
+        case .medicine: return Self.medicinePixels
+        case .clean: return Self.cleanPixels
         }
     }
 
@@ -172,6 +174,98 @@ struct ActionIconView: View {
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     ]
+
+    // MARK: - Medicine: red-and-white pill capsule
+
+    private static let medicineShape: [[Int]] = [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,1,2,3,3,2,2,4,5,5,4,4,1,0,0],
+        [0,1,2,3,2,2,2,2,4,5,4,4,4,4,1,0],
+        [0,1,2,2,2,2,2,2,4,4,4,4,4,4,1,0],
+        [0,1,2,2,2,2,2,2,4,4,4,4,4,4,1,0],
+        [0,1,2,2,2,2,2,2,4,4,4,4,4,4,1,0],
+        [0,0,1,2,2,2,2,2,4,4,4,4,4,1,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ]
+
+    private static let medicinePixels: [(Int, Int, Color)] = {
+        let outline   = Color(red: 0.20, green: 0.12, blue: 0.08)
+        let red       = Color(red: 0.95, green: 0.25, blue: 0.30)
+        let redHi     = Color(red: 1.00, green: 0.60, blue: 0.55)
+        let white     = Color(red: 0.98, green: 0.98, blue: 0.95)
+        let whiteHi   = Color.white
+
+        func color(_ cell: Int) -> Color? {
+            switch cell {
+            case 1: return outline
+            case 2: return red
+            case 3: return redHi
+            case 4: return white
+            case 5: return whiteHi
+            default: return nil
+            }
+        }
+        var out: [(Int, Int, Color)] = []
+        for (row, line) in medicineShape.enumerated() {
+            for (col, cell) in line.enumerated() {
+                if let c = color(cell) { out.append((col, row, c)) }
+            }
+        }
+        return out
+    }()
+
+    // MARK: - Clean: sponge + sparkles
+
+    private static let cleanShape: [[Int]] = [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
+        [0,0,1,2,3,2,2,3,2,2,3,2,2,1,0,0],
+        [0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0],
+        [0,0,1,2,2,3,2,2,3,2,2,2,2,1,0,0],
+        [0,0,1,4,4,4,4,4,4,4,4,4,4,1,0,0],
+        [0,0,1,4,4,4,4,4,4,4,4,4,4,1,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0],
+    ]
+
+    private static let cleanPixels: [(Int, Int, Color)] = {
+        let outline = Color(red: 0.20, green: 0.22, blue: 0.30)
+        let body    = Color(red: 1.00, green: 0.85, blue: 0.30)
+        let sparkle = Color.white
+        let bottom  = Color(red: 0.80, green: 0.65, blue: 0.20)
+
+        func color(_ cell: Int) -> Color? {
+            switch cell {
+            case 1: return outline
+            case 2: return body
+            case 3: return sparkle
+            case 4: return bottom
+            default: return nil
+            }
+        }
+        var out: [(Int, Int, Color)] = []
+        for (row, line) in cleanShape.enumerated() {
+            for (col, cell) in line.enumerated() {
+                if let c = color(cell) { out.append((col, row, c)) }
+            }
+        }
+        return out
+    }()
 
     private static let restPixels: [(Int, Int, Color)] = {
         let blue      = Color(red: 0.50, green: 0.70, blue: 1.00)

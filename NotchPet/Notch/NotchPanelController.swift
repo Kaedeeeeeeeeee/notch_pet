@@ -4,12 +4,23 @@ import Combine
 
 @MainActor
 final class NotchPanelController: NSObject {
+    /// Relative magnitude of a shake effect. `light` is the default
+    /// feedback for `feed/play/rest`; `heavy` is reserved for the death
+    /// → reborn transition.
+    enum ShakeIntensity {
+        case light
+        case heavy
+    }
+
     private let panel: NotchPanel
     private let uiState = NotchPanelState()
     private let petState: PetState
+    let inventory: PlayerInventory
     private var observers: [NSObjectProtocol] = []
     private var globalEscMonitor: Any?
     private var globalClickMonitor: Any?
+    private var cancellables = Set<AnyCancellable>()
+    private var shakeTask: Task<Void, Never>?
 
     /// The built-in MacBook screen that physically owns the notch. Resolved
     /// once at init; re-resolved on screen change so external display
@@ -29,17 +40,28 @@ final class NotchPanelController: NSObject {
         )
     }
 
-    /// Expanded frame shown below the notch (room popover).
-    private let expandedSize = CGSize(width: 360, height: 460)
+    /// Expanded frame shown below the notch (room popover). Block 6
+    /// polish: wider + slightly shorter so the room reads as a horizontal
+    /// house with room for furniture on both sides of the pet.
+    private let expandedSize = CGSize(width: 540, height: 400)
 
     /// How many points the collapsed strip extends beyond the physical notch
     /// on each horizontal side. The pet (22pt) and status icon (16pt) live
     /// inside these extensions.
     static let sideExtension: CGFloat = 34
 
-    init(screen: NSScreen, petState: PetState) {
+    /// Extra width added to the collapsed panel while the mouse is hovering.
+    /// Split evenly on both sides so the pet / icon drift outward slightly.
+    private static let hoverWidthGrowth: CGFloat = 10
+    /// Extra height added on hover. The panel is top-anchored to the screen,
+    /// so the growth drops downward and the bottom corners puff out from the
+    /// physical notch cavity.
+    private static let hoverHeightGrowth: CGFloat = 3
+
+    init(screen: NSScreen, petState: PetState, inventory: PlayerInventory) {
         self.hostScreen = screen
         self.petState = petState
+        self.inventory = inventory
         let initialSize = screen.notchSize ?? CGSize(width: 200, height: 32)
         let contentRect = NSRect(origin: .zero, size: initialSize)
         self.panel = NotchPanel(contentRect: contentRect)
@@ -65,7 +87,11 @@ final class NotchPanelController: NSObject {
         let root = NotchRootView(
             uiState: uiState,
             petState: petState,
-            sideExtension: Self.sideExtension
+            inventory: inventory,
+            sideExtension: Self.sideExtension,
+            onShake: { [weak self] intensity in
+                self?.shake(intensity)
+            }
         )
         let host = FirstMouseHostingView(rootView: root)
         host.autoresizingMask = [.width, .height]
@@ -78,6 +104,15 @@ final class NotchPanelController: NSObject {
                 self.expand()
             }
         }
+        host.onHoverChange = { [weak self] hovered in
+            guard let self else { return }
+            self.uiState.isHovered = hovered
+            // Block 5: let the pet react to being looked at.
+            // Curious mode only triggers in the collapsed strip — when
+            // expanded, the panel already has focus and extra "curious"
+            // feedback would be noisy.
+            self.petState.isHovered = hovered && !self.uiState.isExpanded
+        }
         panel.contentView = host
     }
 
@@ -86,6 +121,10 @@ final class NotchPanelController: NSObject {
     func expand() {
         guard !uiState.isExpanded else { return }
         uiState.isExpanded = true
+        // Clear the curious hover state on expand — the room UI is its
+        // own focus, and a lingering `.curious` would override sleeping /
+        // hungry / etc while the user is looking at the bars.
+        petState.isHovered = false
         animateFrame(to: expandedFrame())
         installDismissMonitors()
     }
@@ -94,14 +133,63 @@ final class NotchPanelController: NSObject {
         guard uiState.isExpanded else { return }
         removeDismissMonitors()
         uiState.isExpanded = false
-        animateFrame(to: collapsedFrame())
+        animateFrame(to: collapsedFrame(hovered: uiState.isHovered))
     }
 
-    private func animateFrame(to frame: NSRect) {
+    private func animateFrame(to frame: NSRect, duration: TimeInterval = 0.28) {
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.28
+            ctx.duration = duration
             ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             panel.animator().setFrame(frame, display: true)
+        }
+    }
+
+    // MARK: - Shake feedback
+
+    /// Nudges the panel horizontally for a short, decaying keyframe
+    /// sequence. Used for feed/play/rest feedback (`.light`) and for the
+    /// farewell transition on `.departed` (`.heavy`). On completion the
+    /// panel is snapped back to its authoritative frame via `reposition()`
+    /// so a mid-shake screen-parameter change can't leave it off-center.
+    func shake(_ intensity: ShakeIntensity) {
+        guard AppSettings.shared.shakeEnabled else { return }
+        // A new heavy shake supersedes any in-progress light shake.
+        if shakeTask != nil, intensity == .light { return }
+        shakeTask?.cancel()
+
+        let amplitude: CGFloat
+        let stepDuration: Double
+        switch intensity {
+        case .light:
+            amplitude = 1.5
+            stepDuration = 0.035
+        case .heavy:
+            amplitude = 4
+            stepDuration = 0.040
+        }
+        let base = panel.frame
+        // Decaying keyframe scales, signs alternating.
+        var scales: [CGFloat] = [-1.0, 1.0, -0.7, 0.7, -0.4, 0.4, 0.0]
+        if intensity == .heavy {
+            scales = [-1.0, 1.0, -0.85, 0.85, -0.65, 0.65, -0.4, 0.4, 0.0]
+        }
+
+        shakeTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for scale in scales {
+                if Task.isCancelled { break }
+                let offset = amplitude * scale
+                let shifted = NSRect(
+                    x: base.origin.x + offset,
+                    y: base.origin.y,
+                    width: base.size.width,
+                    height: base.size.height
+                )
+                self.panel.setFrame(shifted, display: true)
+                try? await Task.sleep(nanoseconds: UInt64(stepDuration * 1_000_000_000))
+            }
+            self.shakeTask = nil
+            self.reposition()
         }
     }
 
@@ -152,8 +240,12 @@ final class NotchPanelController: NSObject {
 
     // MARK: - Positioning
 
-    private func collapsedFrame() -> NSRect {
-        let size = collapsedSize
+    private func collapsedFrame(hovered: Bool = false) -> NSRect {
+        var size = collapsedSize
+        if hovered {
+            size.width += Self.hoverWidthGrowth
+            size.height += Self.hoverHeightGrowth
+        }
         let frame = hostScreen.frame
         let x = frame.midX - size.width / 2
         let y = frame.maxY - size.height
@@ -169,7 +261,9 @@ final class NotchPanelController: NSObject {
     }
 
     func reposition() {
-        let target = uiState.isExpanded ? expandedFrame() : collapsedFrame()
+        let target = uiState.isExpanded
+            ? expandedFrame()
+            : collapsedFrame(hovered: uiState.isHovered)
         panel.setFrame(target, display: true)
     }
 
@@ -199,6 +293,33 @@ final class NotchPanelController: NSObject {
         ) { [weak self] _ in
             Task { @MainActor in self?.panel.orderFrontRegardless() }
         })
+
+        // Block 4: shake hard when the pet departs. PetState posts this
+        // notification from `handleStageTransition` so it stays ignorant
+        // of the view layer.
+        observers.append(nc.addObserver(
+            forName: .notchPetDidDepart,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.shake(.heavy) }
+        })
+
+        // Grow the collapsed strip slightly while the mouse is over it.
+        // Only active while collapsed — during an expanded room session the
+        // hover state is tracked but ignored so it doesn't fight the expand
+        // animation.
+        uiState.$isHovered
+            .removeDuplicates()
+            .sink { [weak self] hovered in
+                guard let self else { return }
+                guard !self.uiState.isExpanded else { return }
+                self.animateFrame(
+                    to: self.collapsedFrame(hovered: hovered),
+                    duration: 0.15
+                )
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -207,4 +328,8 @@ final class NotchPanelController: NSObject {
 @MainActor
 final class NotchPanelState: ObservableObject {
     @Published var isExpanded: Bool = false
+    /// True while the mouse is inside the collapsed notch strip. Drives a
+    /// subtle "puff" — the panel frame grows a few points so the notch looks
+    /// slightly larger under the cursor. Ignored while expanded.
+    @Published var isHovered: Bool = false
 }

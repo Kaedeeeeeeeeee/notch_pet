@@ -14,6 +14,7 @@ final class TimeService {
     private let petState: PetState
     private let store: PetStateStore
     private var schedule: NightSleepSchedule
+    private let behaviorEngine = PetBehaviorEngine()
     private var timer: Timer?
     private var observers: [NSObjectProtocol] = []
 
@@ -38,7 +39,7 @@ final class TimeService {
         installTimer()
         installWorkspaceObservers()
         // Establish initial asleep flag so UI reflects night immediately.
-        petState.isAsleep = schedule.isNightTime(at: Date())
+        petState.isAsleep = schedule.isNightTime(at: Date(), personality: petState.personality)
     }
 
     func stop() {
@@ -71,14 +72,16 @@ final class TimeService {
 
         // Nightly sleep toggle — runs even while inactive so UI stays accurate
         // after the machine wakes up during night hours.
-        let shouldBeAsleep = schedule.isNightTime(at: now)
+        let shouldBeAsleep = schedule.isNightTime(at: now, personality: petState.personality)
         if shouldBeAsleep != petState.isAsleep {
             petState.isAsleep = shouldBeAsleep
         }
 
         if isActive && !petState.isAsleep {
             petState.applyDecay(activeSeconds: delta)
+            petState.runCareTick(now: now, activeSeconds: delta)
             petState.advanceLifecycle(activeSeconds: delta)
+            behaviorEngine.tick(petState: petState, dt: delta)
             petState.lastTickAt = now
         }
 

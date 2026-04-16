@@ -12,6 +12,10 @@ final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
     /// Invoked on every left mouse-down. The controller uses this to toggle
     /// between collapsed and expanded panel layouts.
     var onMouseDown: (() -> Void)?
+    /// Fires true on mouseEntered, false on mouseExited. SwiftUI's `.onHover`
+    /// is unreliable inside a non-activating panel, so hover detection lives
+    /// here as an NSTrackingArea on the AppKit host view.
+    var onHoverChange: ((Bool) -> Void)?
 
     required init(rootView: Content) { super.init(rootView: rootView) }
 
@@ -33,5 +37,27 @@ final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
         // collapsed strip intentionally has no SwiftUI tap gesture, so this
         // forward is a no-op while collapsed.
         super.mouseDown(with: event)
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas where area.owner === self {
+            removeTrackingArea(area)
+        }
+        let area = NSTrackingArea(
+            rect: .zero,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        onHoverChange?(true)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        onHoverChange?(false)
     }
 }

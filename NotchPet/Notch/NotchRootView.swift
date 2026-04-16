@@ -7,15 +7,20 @@ import SwiftUI
 struct NotchRootView: View {
     @ObservedObject var uiState: NotchPanelState
     @ObservedObject var petState: PetState
+    @ObservedObject var inventory: PlayerInventory
     /// How far the collapsed panel extends past the physical notch on each
     /// horizontal side. Used to place the pet / status icon flush against
     /// the left and right extensions rather than inside the cavity.
     let sideExtension: CGFloat
+    /// Block 4 shake callback. Wired by `NotchPanelController` when it
+    /// builds the hosting view; invoked by action buttons (and by
+    /// departed transitions via a separate Notification path).
+    let onShake: (NotchPanelController.ShakeIntensity) -> Void
 
     var body: some View {
         ZStack {
             if uiState.isExpanded {
-                RoomView(petState: petState)
+                RoomView(petState: petState, inventory: inventory, onShake: onShake)
                     .transition(.opacity)
             } else {
                 CollapsedNotchView(petState: petState, sideExtension: sideExtension)
@@ -86,31 +91,29 @@ private struct StatusIconView: View {
 
     var body: some View {
         ZStack {
-            if let emoji = currentIcon {
-                Text(emoji)
-                    .font(.system(size: side))
+            if let kind = currentKind {
+                StatusIconPixelView(kind: kind, size: side)
             }
         }
         .frame(width: side, height: side)
     }
 
-    /// Priority: lifecycle → sleep → lowest vital.
-    private var currentIcon: String? {
+    /// Block 6 priority: lifecycle → sleep → sick → poop → hungry →
+    /// low happy. Everything below is silent (happy / curious don't
+    /// need a notch-strip cue).
+    private var currentKind: StatusIconPixelView.Kind? {
         if petState.stage == .egg { return nil }
-        if petState.stage == .departed { return "👋" }
-        if petState.isAsleep { return "💤" }
-
-        // Most urgent vital first. Threshold 0.30 so the cue fires a little
-        // before the sprite's hungry animation does (0.25 in PetView).
-        let threshold = 0.30
-        let vitals: [(Double, String)] = [
-            (petState.hunger, "🍚"),
-            (petState.energy, "⚡️"),
-            (petState.mood, "💔"),
-        ]
-        guard let worst = vitals.min(by: { $0.0 < $1.0 }), worst.0 < threshold else {
-            return nil
-        }
-        return worst.1
+        if petState.stage == .departed { return .departed }
+        if petState.isAsleep { return .sleeping }
+        if petState.sick { return .sick }
+        if petState.poops > 0 { return .poop }
+        // Hunger at 0 beats happy at 0 — empty stomach is the most
+        // acute "please do something" beat.
+        if petState.hunger == 0 { return .hungry }
+        if petState.happy == 0 { return .lowMood }
+        // Two hearts or fewer on either vital: subtle pre-warning.
+        if petState.hunger <= 1 { return .hungry }
+        if petState.happy <= 1 { return .lowMood }
+        return nil
     }
 }
