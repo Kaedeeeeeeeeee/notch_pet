@@ -10,6 +10,8 @@ import SwiftUI
 struct PetView: View {
     let size: CGFloat
     @ObservedObject var petState: PetState
+    /// When false the pet stays centred (used in the collapsed notch strip).
+    var applyMovement: Bool = true
 
     /// Tracks the next time a personality micro-action should fire.
     @State private var nextMicroAt: Date = .distantFuture
@@ -40,8 +42,8 @@ struct PetView: View {
                 .frame(width: size, height: size)
                 .scaleEffect(x: petState.facingRight ? 1 : -1, y: 1)
         }
-        .offset(x: petState.petX)
-        .animation(.easeInOut(duration: 0.3), value: petState.petX)
+        .offset(x: applyMovement ? petState.petX : 0)
+        .animation(applyMovement ? .easeInOut(duration: 0.3) : nil, value: petState.petX)
         .onAppear { armMicro() }
     }
 

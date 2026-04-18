@@ -66,7 +66,7 @@ private struct CollapsedNotchView: View {
         HStack(spacing: 0) {
             // Left extension: pet sprite, centered inside the extension.
             ZStack {
-                PetView(size: petSide, petState: petState)
+                PetView(size: petSide, petState: petState, applyMovement: false)
             }
             .frame(width: sideExtension)
 
