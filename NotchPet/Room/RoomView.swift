@@ -82,6 +82,10 @@ struct RoomView: View {
                 SleepOverlay()
             }
 
+            if petState.awaitingRebornConfirm {
+                RebornConfirmOverlay(petState: petState)
+            }
+
             if isShopShowing {
                 ShopPanel(
                     inventory: inventory,
@@ -330,5 +334,44 @@ private struct SleepOverlay: View {
                     .foregroundStyle(.white.opacity(0.6))
             }
         }
+    }
+}
+
+// MARK: - Reborn confirmation
+
+private struct RebornConfirmOverlay: View {
+    @ObservedObject var petState: PetState
+    private var lang: AppLanguage { AppSettings.shared.language }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.70).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text(lang.departFarewellTitle(name: petState.name))
+                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                Text(lang.departFarewellBody)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                Button {
+                    petState.confirmReborn()
+                } label: {
+                    Text(lang.departRebornButton)
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.white.opacity(0.15))
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(32)
+        }
+        .onTapGesture { }  // swallow taps to prevent pass-through
     }
 }

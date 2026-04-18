@@ -50,6 +50,17 @@ extension AppLanguage {
     // Sleep
     var petSleeping: String { pick("宠物睡着了", "ペットは寝ています", "Pet is sleeping") }
 
+    // Departed → reborn confirmation
+    func departFarewellTitle(name: String) -> String {
+        pick("\(name) 离开了…", "\(name) は旅立ちました…", "\(name) has departed…")
+    }
+    var departFarewellBody: String {
+        pick("谢谢你的陪伴。\n新的生命正在等待你。",
+             "一緒にいてくれてありがとう。\n新しい命があなたを待っています。",
+             "Thank you for the time together.\nA new life awaits you.")
+    }
+    var departRebornButton: String { pick("迎接新生命", "新しい命を迎える", "Welcome New Life") }
+
     // Shop
     var shopTitle: String { pick("商店", "ショップ", "Shop") }
     var roomsTab: String { pick("房间", "部屋", "Rooms") }

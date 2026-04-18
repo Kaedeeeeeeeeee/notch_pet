@@ -85,14 +85,12 @@ final class TimeService {
             petState.lastTickAt = now
         }
 
-        // Handle the departed → new-generation rollover. We wait a grace
-        // window inside .departed (farewell time) and then reset the
-        // existing PetState instance in place so all observers see the new
-        // egg without reconstructing views.
+        // Handle the departed → reborn flow. After the grace window the
+        // pet waits for the user to confirm before a new egg drops.
         if petState.stage == .departed, let departedAt = petState.departedAt {
             let elapsed = now.timeIntervalSince(departedAt)
-            if elapsed >= LifecycleClock.departGraceSeconds {
-                petState.rebornAsNewGeneration()
+            if elapsed >= LifecycleClock.departGraceSeconds && !petState.awaitingRebornConfirm {
+                petState.awaitingRebornConfirm = true
                 store.save(petState)
                 lastPersistedAt = now
             }

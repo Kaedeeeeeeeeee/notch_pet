@@ -54,6 +54,10 @@ final class PetState: ObservableObject {
     /// Transient hover state. Drives `.curious` mode.
     @Published var isHovered: Bool = false
 
+    /// Set after the departed grace period expires. The pet lingers
+    /// until the user taps "Welcome New Life" in the reborn overlay.
+    @Published var awaitingRebornConfirm: Bool = false
+
     // Movement + behavior (transient, not persisted)
     @Published var petX: CGFloat = 0
     @Published var facingRight: Bool = true
@@ -448,8 +452,15 @@ final class PetState: ObservableObject {
         }
     }
 
+    /// Called by the UI when the user taps the reborn confirmation button.
+    func confirmReborn() {
+        guard awaitingRebornConfirm else { return }
+        rebornAsNewGeneration()
+    }
+
     /// Reset this state instance to a fresh egg for the next generation.
     func rebornAsNewGeneration() {
+        awaitingRebornConfirm = false
         id = UUID()
         species = Species.allCases.randomElement() ?? .chick
         name = "ひよこ"

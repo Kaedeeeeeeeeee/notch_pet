@@ -142,6 +142,12 @@ final class PetStateStore {
         if let snapshot = try? decoder.decode(PetStateSnapshot.self, from: data),
            snapshot.schemaVersion >= 3 {
             let state = snapshot.materialize()
+            // awaitingRebornConfirm is transient — infer from persisted state
+            // so the reborn overlay reappears after an app restart.
+            if state.stage == .departed, let dep = state.departedAt,
+               Date().timeIntervalSince(dep) >= LifecycleClock.departGraceSeconds {
+                state.awaitingRebornConfirm = true
+            }
             if snapshot.schemaVersion < Self.currentSchema { save(state) }
             return state
         }
