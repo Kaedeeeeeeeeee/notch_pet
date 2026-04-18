@@ -12,6 +12,9 @@ import Foundation
 /// expression/behavior tweaks on top, not body-shape changes.
 enum Species: String, Codable, CaseIterable {
     case chick
+    case cat
+    case dog
+    case bird
 }
 
 extension PersonalityTrait {
