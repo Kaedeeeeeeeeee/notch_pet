@@ -389,190 +389,212 @@ private struct KakejikuPixel: View {
 
 // MARK: - Space (galaxy starfield)
 //
-// Deep space with a diagonal Milky-Way-style nebula band, coloured
-// star clusters, a ringed planet, and denser star scatter.
+// Pixel-art deep space rendered as a single Canvas on a 135×100 grid
+// (~4 pt per cell). Dithered nebula clouds, scattered pixel stars,
+// a ringed planet, and a shooting star trail.
 
 private struct SpaceBackground: View {
     var body: some View {
-        ZStack {
-            // Deep space base
-            LinearGradient(
-                colors: [
-                    Color(red: 0.02, green: 0.01, blue: 0.08),
-                    Color(red: 0.06, green: 0.02, blue: 0.18),
-                    Color(red: 0.03, green: 0.01, blue: 0.10),
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        Canvas(rendersAsynchronously: false) { gc, size in
+            let gw = Self.gW, gh = Self.gH
+            let pxW = size.width / CGFloat(gw)
+            let pxH = size.height / CGFloat(gh)
 
-            GeometryReader { geo in
-                let w = geo.size.width
-                let h = geo.size.height
-
-                // --- Nebula / Milky Way band ---
-                // A diagonal glowing band across the scene
-                Ellipse()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color(red: 0.30, green: 0.15, blue: 0.55).opacity(0.35),
-                                Color(red: 0.18, green: 0.08, blue: 0.40).opacity(0.20),
-                                Color.clear,
-                            ],
-                            center: .center,
-                            startRadius: 10,
-                            endRadius: 180
+            for row in 0..<gh {
+                for col in 0..<gw {
+                    let cell = Self.grid[row][col]
+                    let color: Color
+                    if cell == 0 {
+                        // Dark space gradient with banding (discrete steps)
+                        let band = Double(row / 10) / Double(gh / 10)
+                        color = Color(
+                            red:   0.02 + 0.04 * band,
+                            green: 0.01 + 0.02 * band,
+                            blue:  0.08 + 0.10 * band
                         )
-                    )
-                    .frame(width: w * 1.2, height: h * 0.40)
-                    .rotationEffect(.degrees(-25))
-                    .position(x: w * 0.45, y: h * 0.38)
-
-                // Second nebula cloud (warm tint)
-                Ellipse()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color(red: 0.55, green: 0.18, blue: 0.35).opacity(0.22),
-                                Color(red: 0.35, green: 0.10, blue: 0.25).opacity(0.10),
-                                Color.clear,
-                            ],
-                            center: .center,
-                            startRadius: 5,
-                            endRadius: 100
-                        )
-                    )
-                    .frame(width: w * 0.55, height: h * 0.35)
-                    .position(x: w * 0.72, y: h * 0.55)
-
-                // Small teal nebula patch
-                Ellipse()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color(red: 0.15, green: 0.40, blue: 0.55).opacity(0.20),
-                                Color.clear,
-                            ],
-                            center: .center,
-                            startRadius: 5,
-                            endRadius: 60
-                        )
-                    )
-                    .frame(width: 100, height: 60)
-                    .position(x: w * 0.20, y: h * 0.70)
-
-                // --- Stars (many more, with colour tints) ---
-                ForEach(Self.stars.indices, id: \.self) { i in
-                    let s = Self.stars[i]
-                    Circle()
-                        .fill(s.color.opacity(s.a))
-                        .frame(width: s.size, height: s.size)
-                        .position(x: w * s.x, y: h * s.y)
+                    } else {
+                        guard let c = Self.pal[cell] else { continue }
+                        color = c
+                    }
+                    gc.fill(
+                        Path(CGRect(x: CGFloat(col) * pxW, y: CGFloat(row) * pxH,
+                                    width: ceil(pxW), height: ceil(pxH))),
+                        with: .color(color))
                 }
-
-                // --- Planet with ring ---
-                ZStack {
-                    // Planet body
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    Color(red: 0.65, green: 0.45, blue: 0.95),
-                                    Color(red: 0.30, green: 0.18, blue: 0.60),
-                                ],
-                                center: UnitPoint(x: 0.35, y: 0.30),
-                                startRadius: 2,
-                                endRadius: 22
-                            )
-                        )
-                        .frame(width: 36, height: 36)
-
-                    // Ring (ellipse behind + in front, simple approach)
-                    Ellipse()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.75, green: 0.65, blue: 0.95).opacity(0.6),
-                                    Color(red: 0.50, green: 0.35, blue: 0.80).opacity(0.3),
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ),
-                            lineWidth: 2
-                        )
-                        .frame(width: 56, height: 14)
-                        .rotationEffect(.degrees(-15))
-                }
-                .position(x: w * 0.80, y: h * 0.20)
-
-                // --- Shooting star ---
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.0),
-                                Color.white.opacity(0.6),
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: 32, height: 1)
-                    .rotationEffect(.degrees(25))
-                    .position(x: w * 0.28, y: h * 0.14)
             }
         }
     }
 
-    private struct Star {
-        let x: CGFloat
-        let y: CGFloat
-        let size: CGFloat
-        let a: Double
-        let color: Color
+    // Grid dimensions (each cell ≈ 4 pt at 540×400)
+    private static let gW = 135
+    private static let gH = 100
+
+    // Palette — 0 is background (handled inline), rest map to colors.
+    // 1/2 = nebula purple, 3 = nebula pink, 4 = nebula teal,
+    // 5 = dim star, 6 = bright star, 7 = blue star, 8 = warm star,
+    // 9/10 = planet body, 11 = planet ring, 12 = shooting star
+    private static let pal: [UInt8: Color] = [
+        1:  Color(red: 0.18, green: 0.08, blue: 0.30),
+        2:  Color(red: 0.30, green: 0.15, blue: 0.45),
+        3:  Color(red: 0.45, green: 0.18, blue: 0.35),
+        4:  Color(red: 0.15, green: 0.30, blue: 0.45),
+        5:  Color(red: 0.60, green: 0.60, blue: 0.65),
+        6:  Color(red: 0.95, green: 0.95, blue: 1.00),
+        7:  Color(red: 0.55, green: 0.70, blue: 1.00),
+        8:  Color(red: 1.00, green: 0.80, blue: 0.55),
+        9:  Color(red: 0.55, green: 0.40, blue: 0.85),
+        10: Color(red: 0.28, green: 0.16, blue: 0.52),
+        11: Color(red: 0.65, green: 0.55, blue: 0.85),
+        12: Color(red: 0.85, green: 0.85, blue: 0.95),
+    ]
+
+    // ---- Planet template (16×14, ring wraps around body) ----
+    private static let planet: [[UInt8]] = [
+        [ 0, 0,11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0,11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0,11, 9, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 9, 9, 9, 9, 9,10, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 9, 9, 9, 9,10,10,10,10, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 9, 9, 9,10,10,10,10,10, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 9, 9, 9,10,10,10,10,10, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 9, 9, 9,10,10,10,10,10, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 9, 9, 9, 9,10,10,10,10, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 9, 9, 9, 9,10,10, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 9, 9, 9, 9, 0,11, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,11, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ]
+
+    // ---- Scene builder ----
+
+    private static func stamp(
+        _ g: inout [[UInt8]], _ t: [[UInt8]], cx: Int, baseRow: Int
+    ) {
+        let tH = t.count, tW = t[0].count
+        let sr = baseRow - tH + 1, sc = cx - tW / 2
+        for tr in 0..<tH {
+            for tc in 0..<tW {
+                let v = t[tr][tc]
+                if v == 0 { continue }
+                let r = sr + tr, c = sc + tc
+                if r >= 0, r < gH, c >= 0, c < gW { g[r][c] = v }
+            }
+        }
     }
 
-    private static let white = Color.white
-    private static let blue  = Color(red: 0.70, green: 0.80, blue: 1.00)
-    private static let warm  = Color(red: 1.00, green: 0.85, blue: 0.70)
-    private static let pink  = Color(red: 1.00, green: 0.75, blue: 0.85)
+    private static let grid: [[UInt8]] = {
+        var g = Array(repeating: Array(repeating: UInt8(0), count: gW), count: gH)
 
-    private static let stars: [Star] = [
-        // Bright prominent stars
-        Star(x: 0.10, y: 0.15, size: 3, a: 0.95, color: blue),
-        Star(x: 0.50, y: 0.40, size: 3, a: 0.95, color: white),
-        Star(x: 0.92, y: 0.12, size: 3, a: 0.90, color: warm),
-        Star(x: 0.25, y: 0.85, size: 3, a: 0.85, color: blue),
-        // Medium stars
-        Star(x: 0.30, y: 0.30, size: 2, a: 0.80, color: white),
-        Star(x: 0.70, y: 0.55, size: 2, a: 0.85, color: pink),
-        Star(x: 0.44, y: 0.09, size: 2, a: 0.70, color: blue),
-        Star(x: 0.15, y: 0.52, size: 2, a: 0.75, color: warm),
-        Star(x: 0.60, y: 0.78, size: 2, a: 0.80, color: white),
-        Star(x: 0.85, y: 0.42, size: 2, a: 0.75, color: blue),
-        Star(x: 0.38, y: 0.62, size: 2, a: 0.70, color: white),
-        Star(x: 0.78, y: 0.88, size: 2, a: 0.80, color: pink),
-        // Small faint stars (galaxy scatter)
-        Star(x: 0.22, y: 0.06, size: 1, a: 0.55, color: white),
-        Star(x: 0.62, y: 0.05, size: 1, a: 0.50, color: blue),
-        Star(x: 0.88, y: 0.65, size: 1, a: 0.60, color: white),
-        Star(x: 0.06, y: 0.72, size: 1, a: 0.50, color: warm),
-        Star(x: 0.50, y: 0.88, size: 1, a: 0.55, color: white),
-        Star(x: 0.78, y: 0.32, size: 1, a: 0.50, color: white),
-        Star(x: 0.18, y: 0.42, size: 1, a: 0.55, color: blue),
-        Star(x: 0.34, y: 0.48, size: 1, a: 0.45, color: white),
-        Star(x: 0.56, y: 0.22, size: 1, a: 0.50, color: pink),
-        Star(x: 0.42, y: 0.74, size: 1, a: 0.55, color: white),
-        Star(x: 0.68, y: 0.36, size: 1, a: 0.50, color: blue),
-        Star(x: 0.96, y: 0.52, size: 1, a: 0.45, color: white),
-        Star(x: 0.12, y: 0.92, size: 1, a: 0.50, color: warm),
-        Star(x: 0.82, y: 0.74, size: 1, a: 0.55, color: white),
-        Star(x: 0.04, y: 0.28, size: 1, a: 0.45, color: white),
-        Star(x: 0.74, y: 0.14, size: 1, a: 0.50, color: blue),
-        Star(x: 0.48, y: 0.56, size: 1, a: 0.50, color: white),
-        Star(x: 0.28, y: 0.18, size: 1, a: 0.45, color: pink),
-    ]
+        // --- 1. Nebula clouds (dithered scatter) ---
+
+        // Main diagonal purple nebula band (upper-left to lower-right)
+        for r in 15..<75 {
+            for c in 12..<125 {
+                let centerR = 15 + (c - 12) * 53 / 113
+                let dist = abs(r - centerR)
+                let hash = (r &* 7 &+ c &* 13 &+ r &* c &* 3) % 31
+                if dist < 8 && hash < 7 {
+                    g[r][c] = 2   // mid purple (dense core)
+                } else if dist < 14 && hash < 3 {
+                    g[r][c] = 1   // dark purple (sparse edge)
+                }
+            }
+        }
+
+        // Warm pink nebula accent (right side)
+        for r in 45..<75 {
+            for c in 75..<125 {
+                let dist = abs(c - 98) + abs(r - 58)
+                let hash = (r &* 11 &+ c &* 7) % 23
+                if dist < 12 && hash < 5 {
+                    g[r][c] = 3   // warm pink
+                } else if dist < 18 && hash < 2 {
+                    g[r][c] = 1   // dark purple fringe
+                }
+            }
+        }
+
+        // Small teal nebula patch (lower left)
+        for r in 62..<85 {
+            for c in 10..<45 {
+                let dist = abs(c - 27) + abs(r - 72)
+                let hash = (r &* 5 &+ c &* 11) % 17
+                if dist < 10 && hash < 5 {
+                    g[r][c] = 4   // teal
+                } else if dist < 15 && hash < 2 {
+                    g[r][c] = 1   // dark purple
+                }
+            }
+        }
+
+        // --- 2. Stars ---
+
+        // Bright stars with cross-sparkle pattern (+)
+        let sparkles: [(Int, Int, UInt8)] = [
+            ( 12, 15, 7),   // blue (upper left)
+            ( 67, 40, 6),   // white (center)
+            (122, 12, 8),   // warm (upper right)
+            ( 35, 82, 7),   // blue (lower left)
+            ( 95, 22, 6),   // white (mid-upper right)
+        ]
+        for (c, r, v) in sparkles {
+            g[r][c] = v
+            if r > 0     { g[r-1][c] = 5 }
+            if r < gH-1  { g[r+1][c] = 5 }
+            if c > 0     { g[r][c-1] = 5 }
+            if c < gW-1  { g[r][c+1] = 5 }
+        }
+
+        // 2×2 bright star clusters (small but visible star bodies)
+        let clusters: [(Int, Int, UInt8)] = [
+            ( 55, 28, 6),   // white
+            ( 85, 65, 7),   // blue
+            ( 15, 72, 8),   // warm
+        ]
+        for (c, r, v) in clusters {
+            g[r][c] = v;     g[r][c+1] = v
+            g[r+1][c] = v;   g[r+1][c+1] = v
+        }
+
+        // Medium stars (single bright pixel)
+        let medStars: [(Int, Int, UInt8)] = [
+            ( 40, 30, 6),  ( 95, 55, 7),  ( 60, 10, 7),  ( 20, 50, 8),
+            ( 80, 77, 6),  (115, 42, 7),  ( 50, 62, 6),  (105, 87, 8),
+            (  8, 90, 7),  ( 75, 15, 6),  ( 28, 35, 8),  (130, 65, 7),
+        ]
+        for (c, r, v) in medStars { g[r][c] = v }
+
+        // Dim stars (scattered single pixels)
+        let dimStars: [(Int, Int)] = [
+            ( 30,  5), ( 82,  5), (117, 20), (  7, 27),
+            ( 68, 22), (  7, 70), (125, 65), ( 55, 87),
+            (100,  7), ( 25, 95), (128, 92), ( 75, 47),
+            ( 45, 37), ( 88, 70), (112, 80), ( 17, 87),
+            ( 62, 95), (130, 35), (  3, 45), ( 92, 25),
+            ( 15, 12), ( 48,  3), (110, 50), ( 38, 72),
+            ( 72, 60), (  5, 60), (120, 10), ( 58, 45),
+            ( 85, 92), ( 22, 18), (102, 32), ( 43, 85),
+            (133, 48), ( 10, 35), ( 65, 78), (118, 58),
+            ( 52, 20), ( 90, 88), ( 33, 55), (108, 15),
+        ]
+        for (c, r) in dimStars { g[r][c] = 5 }
+
+        // --- 3. Planet (upper right) ---
+        stamp(&g, planet, cx: 110, baseRow: 28)
+
+        // --- 4. Shooting star (diagonal trail, upper left) ---
+        g[ 7][28] = 5     // dim tail
+        g[ 8][29] = 5
+        g[ 9][30] = 5
+        g[10][31] = 12    // mid-bright
+        g[11][32] = 12
+        g[12][33] = 12
+        g[13][34] = 6     // bright head
+        g[14][35] = 6
+
+        return g
+    }()
 }
 
 // MARK: - Forest
