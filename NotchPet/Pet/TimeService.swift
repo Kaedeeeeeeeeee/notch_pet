@@ -39,7 +39,8 @@ final class TimeService {
         installTimer()
         installWorkspaceObservers()
         // Establish initial asleep flag so UI reflects night immediately.
-        petState.isAsleep = schedule.isNightTime(at: Date(), personality: petState.personality)
+        petState.isAsleep = petState.observesNightSleep &&
+            schedule.isNightTime(at: Date(), personality: petState.personality)
     }
 
     func stop() {
@@ -71,8 +72,10 @@ final class TimeService {
         lastTickAt = now
 
         // Nightly sleep toggle — runs even while inactive so UI stays accurate
-        // after the machine wakes up during night hours.
-        let shouldBeAsleep = schedule.isNightTime(at: now, personality: petState.personality)
+        // after the machine wakes up during night hours. Eggs + freshly
+        // hatched children (grace window) opt out via `observesNightSleep`.
+        let shouldBeAsleep = petState.observesNightSleep &&
+            schedule.isNightTime(at: now, personality: petState.personality)
         if shouldBeAsleep != petState.isAsleep {
             petState.isAsleep = shouldBeAsleep
         }
@@ -82,6 +85,7 @@ final class TimeService {
             petState.runCareTick(now: now, activeSeconds: delta)
             petState.advanceLifecycle(activeSeconds: delta)
             behaviorEngine.tick(petState: petState, dt: delta)
+            advanceMarriage(now: now)
             petState.lastTickAt = now
         }
 
@@ -99,6 +103,52 @@ final class TimeService {
         if now.timeIntervalSince(lastPersistedAt) >= persistInterval {
             store.save(petState)
             lastPersistedAt = now
+            // Piggyback a best-effort cloud push on the same interval.
+            let snapshot = petState
+            Task { @MainActor in
+                await CloudSync.shared.pushPetIfDue(snapshot, now: now)
+            }
+        }
+    }
+
+    // MARK: - Marriage state machine
+
+    /// Walks the marriage → egg → baby → family-farewell timeline. Called
+    /// on every active tick after regular lifecycle advancement so newly
+    /// accumulated `ageActiveSeconds` is visible here. Only fires for
+    /// pets in adult/elder with a live partner; departed pets short-
+    /// circuit via `triggerDeath` in `runCareTick`.
+    private func advanceMarriage(now: Date) {
+        // 1) Marriage → egg (marriedAt + 1 active-day, gated by an adult/
+        //    elder partner-alive parent).
+        if let marriedAt = petState.marriedAt,
+           petState.partner != nil,
+           petState.pendingEgg == nil,
+           petState.pendingBaby == nil,
+           now >= marriedAt.addingTimeInterval(LifecycleClock.activeSecondsPerDay),
+           petState.stage == .adult || petState.stage == .elder {
+            petState.layEgg()
+        }
+
+        // 2) Egg → baby (hatchDueAt reached).
+        if let egg = petState.pendingEgg,
+           petState.pendingBaby == nil,
+           now >= egg.hatchDueAt {
+            petState.hatchBaby()
+        }
+
+        // 3) Baby grown → family farewell. Parents exit when either 10
+        //    active-days old OR 1 active-day after hatching, whichever
+        //    is LATER. Guarantees at least one day of family time.
+        if petState.pendingBaby != nil,
+           let hatchAge = petState.babyHatchedAtAge,
+           petState.stage != .departed {
+            let oneDay = LifecycleClock.activeSecondsPerDay
+            let tenDays = 10.0 * oneDay
+            let farewellAge = max(tenDays, hatchAge + oneDay)
+            if petState.ageActiveSeconds >= farewellAge {
+                petState.triggerFamilyFarewell()
+            }
         }
     }
 

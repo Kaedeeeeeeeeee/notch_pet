@@ -16,6 +16,8 @@ final class PetBehaviorEngine {
     func tick(petState: PetState, dt: TimeInterval) {
         guard petState.canInteract else { return }
         guard petState.stage != .egg else { return }
+        // User is dragging the pet — yield full control to the gesture.
+        guard !petState.isBeingHeld else { return }
 
         let now = Date()
 

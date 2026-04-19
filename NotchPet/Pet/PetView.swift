@@ -24,8 +24,13 @@ struct PetView: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: animInterval, paused: false)) { context in
-            let frame = Self.frameIndex(at: context.date, personality: petState.personality)
             let resolved = resolveMode(at: context.date)
+            // Sleeping breathes at a fixed slow rate (3 frames over ~2s)
+            // independent of personality fps, so it feels like a slow
+            // rise-and-fall instead of the pet racing through frames.
+            let frame = resolved == .sleeping
+                ? Int(context.date.timeIntervalSinceReferenceDate * 1.5) % 3
+                : Self.frameIndex(at: context.date, personality: petState.personality)
 
             let cg = PetSpriteLibrary.shared.frame(
                 species: petState.species,
@@ -140,6 +145,8 @@ struct PetView: View {
         case .actionFeedback(let m): return m
         default: break
         }
+        // User is dragging the pet — override all ambient/state modes.
+        if state.isBeingHeld { return .held }
         if state.sick { return .sick }
         if state.personality?.angerTriggerThreshold != nil,
            (state.hunger == 0 || state.happy == 0) {
@@ -168,6 +175,8 @@ enum PetMode: String {
     case walk, peck, flap, dance, stretch, sit
     // Action feedback
     case eat, playAct = "play_act", medic, poopAct = "poop_act", cleanAct = "clean_act"
+    // User-driven: pet is being dragged around the room
+    case held
 
     /// Tag name used in the Aseprite spritesheet.
     var tagName: String { rawValue }

@@ -15,6 +15,30 @@ enum Species: String, Codable, CaseIterable {
     case cat
     case dog
     case bird
+    case frog
+    case snake
+    case turtle
+    case snail
+    case octopus
+    case slime
+
+    /// Per-species default name (hiragana cute form). The user can rename
+    /// via the RoomView header tap-to-edit. `rebornAsNewGeneration()`
+    /// resets to this when the new species is rolled.
+    var defaultName: String {
+        switch self {
+        case .chick:   return "ひよこ"
+        case .cat:     return "こねこ"
+        case .dog:     return "こいぬ"
+        case .bird:    return "ことり"
+        case .frog:    return "かえる"
+        case .snake:   return "へびちゃん"
+        case .turtle:  return "かめきち"
+        case .snail:   return "でんでん"
+        case .octopus: return "たこちゃん"
+        case .slime:   return "すらいむ"
+        }
+    }
 }
 
 extension PersonalityTrait {

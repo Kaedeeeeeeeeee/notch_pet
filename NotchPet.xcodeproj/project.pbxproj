@@ -7,28 +7,44 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0557B0FB0D71D6FE0978B2EA /* PetCursors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586963E99D0149981DA5ACEB /* PetCursors.swift */; };
 		09DF0DCBADC938A360517A3E /* PlayerInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFDD4D9F8925CC3F674BEB5 /* PlayerInventory.swift */; };
 		0C9CE880F43AE5DFD287FD41 /* FurnitureSpriteLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = C767F57F0E65884D6B3793BB /* FurnitureSpriteLibrary.swift */; };
 		0ECAB06FFF469D318E1E0CDF /* RoomTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D14B9A7BDA4D2F49F379871 /* RoomTheme.swift */; };
 		10925B542627B159CAEFE445 /* ActionIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464970C6F894F925C1B474F9 /* ActionIconView.swift */; };
+		177979C8FE9862019426F7FE /* OnboardingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71421B7080EEAD2BDEF15626 /* OnboardingOverlay.swift */; };
+		1DD308D2A94ADA5F7F46FB0B /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB1D4C54627D4CD808132E4 /* AuthService.swift */; };
 		2657673194451E44F486BB13 /* ActionAnimationOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF7EC5F3F9178B5800550FC /* ActionAnimationOverlay.swift */; };
 		2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89332AD3A71CB1B6C62FE845 /* NotchGeometry.swift */; };
+		33CEA2678CC41617BFF32EEC /* MarriagePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A90D7A3CD036E22271E090 /* MarriagePayload.swift */; };
+		3C4D51F5FFCDF1FC77584753 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 26FFBD806974723E05DB4E4F /* Supabase */; };
 		40AD5CFCC1A3BBDAF99F05EF /* InventoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45A1C9199787FDEBB0BC843 /* InventoryStore.swift */; };
+		4388D17A2D5042347C3B380E /* Cursors in Resources */ = {isa = PBXBuildFile; fileRef = 773E8578934248614FA7103B /* Cursors */; };
 		4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */; };
 		50585BA54C67F3911B6F16F2 /* PoopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46CF8B0FB3906BC908CB2ECB /* PoopView.swift */; };
+		532684ECFD971922852C9924 /* SupabaseClientManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C59C572A3DC9196A1144F78 /* SupabaseClientManager.swift */; };
+		569605F5ED414361B75D1663 /* QRCodeRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1453389005DB1BCAA33F758 /* QRCodeRenderer.swift */; };
 		571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */; };
 		5859B3040731092AA40DB3B3 /* TimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A117DA97C2A1F229BFF51271 /* TimeService.swift */; };
+		62F212A83CEAB2DFD116759C /* CursorRect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD3BE40477D5B8ABBF89A01B /* CursorRect.swift */; };
 		6B72C56154DE778495D54EA9 /* HeartsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1E0640FEBB356A3052019 /* HeartsRow.swift */; };
 		6D1FEB33E2BC451D86E8ECC9 /* RoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEABA289258E6E18698446C /* RoomView.swift */; };
 		7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5AA7B41C812CA4AFAF841B /* PetView.swift */; };
 		77C8E7CA8FA67FBD64868D34 /* Audio in Resources */ = {isa = PBXBuildFile; fileRef = EF6B33D52A313769168D692A /* Audio */; };
+		7D6AAC97E6300FD51CD8B73A /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0311D1441EA3F9444AEE42 /* SupabaseConfig.swift */; };
+		86974DF88DCC8B00243538F0 /* SleepZzzOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87C701A3198CC97C408F84DA /* SleepZzzOverlay.swift */; };
+		9224C7E2688C8FC994C62D66 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF6ADC7C463D86ECDDE200AC /* CloudSync.swift */; };
 		98EF6B333EF80A7B74EAB89A /* Sprites in Resources */ = {isa = PBXBuildFile; fileRef = A8E9D617AF607DC7B272FF6F /* Sprites */; };
 		99217946E8B7E2FD5C35A81B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */; };
 		9B11623FDB832C6DB489D443 /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */; };
+		9D2190DDB802CDE14BCC80DB /* Lineage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA3D4431D15F5DA61CBFB3D /* Lineage.swift */; };
 		A05838EBE0D09E3EC0B8E133 /* Personality.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC64044CE5BC2F17F75FCCF2 /* Personality.swift */; };
+		A4120C631766DEE9B67B7394 /* MemorialBookPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C8C948E02047B7F70DD7 /* MemorialBookPanel.swift */; };
 		A44DCED6E49C493C23551C47 /* PetSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC6D998DCE8FD1D1ABB9B49 /* PetSprite.swift */; };
 		A7DBDAE2F9D7F5B895BC591B /* StatusIconPixelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD02ACD20394891F9780D59C /* StatusIconPixelView.swift */; };
+		A8B251FC8D26A0361D013C51 /* MarriagePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDB41FD15C1F3C66F380D32 /* MarriagePanel.swift */; };
 		AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A770D7343F9BA29AFD085A /* FirstMouseHostingView.swift */; };
+		AB261BD73301BED7F646A054 /* MemorialCardOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3E9526D17F824DC0A35595 /* MemorialCardOverlay.swift */; };
 		AC70CAC810BB96CD850A41B9 /* NotchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */; };
 		AD6753DCC3ACCBCEBB9C49C2 /* NotchPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A932443E1C3B8C41164728B /* NotchPetApp.swift */; };
 		B4E0951C58178603F9906CE1 /* PersonalityBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = E374AE18062D2E69651C1286 /* PersonalityBehavior.swift */; };
@@ -37,15 +53,21 @@
 		BCFB5B4A403ABC888E6D4C4E /* PetBehaviorEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB9695E69917F15ECDCBE56 /* PetBehaviorEngine.swift */; };
 		BE95E98A82A334405FE82259 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212F2B12C0DB1CA92329401A /* SoundPlayer.swift */; };
 		C33F03FA77A95CBC8692CD24 /* PetStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A361FEDC68AB778250C96F /* PetStateStore.swift */; };
+		C5E0CE6E309AA3CEB911B944 /* FarewellOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5752F2D0F5DCE5CB90B6C470 /* FarewellOverlay.swift */; };
 		D30A9F7486645997587236F7 /* ManagementPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F0AA55030B7F057AA7C77 /* ManagementPanel.swift */; };
 		D868041C33FC2B76B0BC1E9B /* NotchPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44852ED00B2C856AC36383F8 /* NotchPanelController.swift */; };
 		D90328AFFECE54B265E949BC /* HeaderIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6C600840FE0220DA068AE4 /* HeaderIconView.swift */; };
 		DF0DE8BAA17AC347FC714E10 /* NotchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E72747044D897EF0B9EDC54 /* NotchRootView.swift */; };
 		E092B50345929D7B2A293145 /* NightSleep.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD254F76D61401C7375893A /* NightSleep.swift */; };
+		E8D925CB628BF8C62CDEBABF /* QRScanWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C71C3231F09C41A034090E5 /* QRScanWindowController.swift */; };
+		EC4688C4D135C386C27298B8 /* PetHeadStatusOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601F2B591952366AFF4B4321 /* PetHeadStatusOverlay.swift */; };
+		F3EBC2E3BC728A1F72B7AED8 /* NightTintOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 535CD707281FE928A0859E71 /* NightTintOverlay.swift */; };
+		FEBB0E4D7DFAD49A3C11A235 /* CloudModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5933F69EDF1203FAE8C5C83C /* CloudModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0A932443E1C3B8C41164728B /* NotchPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPetApp.swift; sourceTree = "<group>"; };
+		0E3E9526D17F824DC0A35595 /* MemorialCardOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemorialCardOverlay.swift; sourceTree = "<group>"; };
 		0E72747044D897EF0B9EDC54 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		212F2B12C0DB1CA92329401A /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		27F84C91E830F0E76A9B1F1D /* NotchPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,37 +77,78 @@
 		46CF8B0FB3906BC908CB2ECB /* PoopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoopView.swift; sourceTree = "<group>"; };
 		4B6C600840FE0220DA068AE4 /* HeaderIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderIconView.swift; sourceTree = "<group>"; };
 		4D14B9A7BDA4D2F49F379871 /* RoomTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomTheme.swift; sourceTree = "<group>"; };
+		535CD707281FE928A0859E71 /* NightTintOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightTintOverlay.swift; sourceTree = "<group>"; };
+		5752F2D0F5DCE5CB90B6C470 /* FarewellOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FarewellOverlay.swift; sourceTree = "<group>"; };
+		586963E99D0149981DA5ACEB /* PetCursors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetCursors.swift; sourceTree = "<group>"; };
+		5933F69EDF1203FAE8C5C83C /* CloudModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudModels.swift; sourceTree = "<group>"; };
+		5EA3D4431D15F5DA61CBFB3D /* Lineage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lineage.swift; sourceTree = "<group>"; };
 		5F5AA7B41C812CA4AFAF841B /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
 		5FF7EC5F3F9178B5800550FC /* ActionAnimationOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionAnimationOverlay.swift; sourceTree = "<group>"; };
+		601F2B591952366AFF4B4321 /* PetHeadStatusOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetHeadStatusOverlay.swift; sourceTree = "<group>"; };
 		63A8B47465D8AB8DA7B83065 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		69A361FEDC68AB778250C96F /* PetStateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetStateStore.swift; sourceTree = "<group>"; };
 		6FC6D998DCE8FD1D1ABB9B49 /* PetSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetSprite.swift; sourceTree = "<group>"; };
+		71421B7080EEAD2BDEF15626 /* OnboardingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingOverlay.swift; sourceTree = "<group>"; };
+		773E8578934248614FA7103B /* Cursors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Cursors; path = NotchPet/Assets/Cursors; sourceTree = SOURCE_ROOT; };
 		7AEABA289258E6E18698446C /* RoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomView.swift; sourceTree = "<group>"; };
 		7B0AF2862573BC56FC026DB9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87C701A3198CC97C408F84DA /* SleepZzzOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepZzzOverlay.swift; sourceTree = "<group>"; };
 		89332AD3A71CB1B6C62FE845 /* NotchGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGeometry.swift; sourceTree = "<group>"; };
+		8C71C3231F09C41A034090E5 /* QRScanWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanWindowController.swift; sourceTree = "<group>"; };
+		8E72C8C948E02047B7F70DD7 /* MemorialBookPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemorialBookPanel.swift; sourceTree = "<group>"; };
 		98486A2E4A6ABE18B5838654 /* NotchPet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchPet.entitlements; sourceTree = "<group>"; };
 		9C3F0AA55030B7F057AA7C77 /* ManagementPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagementPanel.swift; sourceTree = "<group>"; };
+		9C59C572A3DC9196A1144F78 /* SupabaseClientManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientManager.swift; sourceTree = "<group>"; };
 		A117DA97C2A1F229BFF51271 /* TimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeService.swift; sourceTree = "<group>"; };
+		A1453389005DB1BCAA33F758 /* QRCodeRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeRenderer.swift; sourceTree = "<group>"; };
 		A2A770D7343F9BA29AFD085A /* FirstMouseHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstMouseHostingView.swift; sourceTree = "<group>"; };
 		A8E9D617AF607DC7B272FF6F /* Sprites */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sprites; path = NotchPet/Assets/Sprites; sourceTree = SOURCE_ROOT; };
 		ABD254F76D61401C7375893A /* NightSleep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightSleep.swift; sourceTree = "<group>"; };
 		AC64044CE5BC2F17F75FCCF2 /* Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Personality.swift; sourceTree = "<group>"; };
+		AD3BE40477D5B8ABBF89A01B /* CursorRect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorRect.swift; sourceTree = "<group>"; };
 		AE7672DA6D5E1111D6F0FCD9 /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
+		AF6ADC7C463D86ECDDE200AC /* CloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSync.swift; sourceTree = "<group>"; };
 		B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleStage.swift; sourceTree = "<group>"; };
 		BD02ACD20394891F9780D59C /* StatusIconPixelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusIconPixelView.swift; sourceTree = "<group>"; };
+		BF0311D1441EA3F9444AEE42 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		C1A90D7A3CD036E22271E090 /* MarriagePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarriagePayload.swift; sourceTree = "<group>"; };
 		C4AAFFFE2E27DDF239CD34A2 /* NotchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanel.swift; sourceTree = "<group>"; };
 		C767F57F0E65884D6B3793BB /* FurnitureSpriteLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FurnitureSpriteLibrary.swift; sourceTree = "<group>"; };
 		D30AEA7CFEEACE4E8CDE963F /* FurnitureCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FurnitureCatalog.swift; sourceTree = "<group>"; };
+		DDB1D4C54627D4CD808132E4 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		DDFDD4D9F8925CC3F674BEB5 /* PlayerInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerInventory.swift; sourceTree = "<group>"; };
 		E374AE18062D2E69651C1286 /* PersonalityBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalityBehavior.swift; sourceTree = "<group>"; };
 		E45A1C9199787FDEBB0BC843 /* InventoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryStore.swift; sourceTree = "<group>"; };
 		EEB9695E69917F15ECDCBE56 /* PetBehaviorEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetBehaviorEngine.swift; sourceTree = "<group>"; };
 		EF6B33D52A313769168D692A /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = NotchPet/Assets/Audio; sourceTree = SOURCE_ROOT; };
+		EFDB41FD15C1F3C66F380D32 /* MarriagePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarriagePanel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		19421952A09097CB1EBEB822 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C4D51F5FFCDF1FC77584753 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		1FF58EF4920EA9BB36F97478 /* Marriage */ = {
+			isa = PBXGroup;
+			children = (
+				EFDB41FD15C1F3C66F380D32 /* MarriagePanel.swift */,
+				C1A90D7A3CD036E22271E090 /* MarriagePayload.swift */,
+				A1453389005DB1BCAA33F758 /* QRCodeRenderer.swift */,
+				8C71C3231F09C41A034090E5 /* QRScanWindowController.swift */,
+			);
+			path = Marriage;
+			sourceTree = "<group>";
+		};
 		215DB12C6BAB048E1B35C813 /* Inventory */ = {
 			isa = PBXGroup;
 			children = (
@@ -96,6 +159,18 @@
 				4D14B9A7BDA4D2F49F379871 /* RoomTheme.swift */,
 			);
 			path = Inventory;
+			sourceTree = "<group>";
+		};
+		2E70207178F7AAC481ADA1E6 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				DDB1D4C54627D4CD808132E4 /* AuthService.swift */,
+				5933F69EDF1203FAE8C5C83C /* CloudModels.swift */,
+				AF6ADC7C463D86ECDDE200AC /* CloudSync.swift */,
+				9C59C572A3DC9196A1144F78 /* SupabaseClientManager.swift */,
+				BF0311D1441EA3F9444AEE42 /* SupabaseConfig.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		35AEE66FE43596EF90105CF7 /* Products */ = {
@@ -116,10 +191,12 @@
 				875A6E45108DBC600FEC7D40 /* Assets */,
 				C729E8B67F21B70EA3906D17 /* Audio */,
 				215DB12C6BAB048E1B35C813 /* Inventory */,
+				1FF58EF4920EA9BB36F97478 /* Marriage */,
 				D3BF52C11C43E77047A32874 /* Notch */,
 				5758709E64C99B398D024505 /* Pet */,
 				8816EAD5756683445B70DFAF /* Resources */,
 				A81D7CB0BC76E71DF9ADEB97 /* Room */,
+				2E70207178F7AAC481ADA1E6 /* Services */,
 			);
 			path = NotchPet;
 			sourceTree = "<group>";
@@ -128,6 +205,7 @@
 			isa = PBXGroup;
 			children = (
 				B6BB4B7A7B66C46D347206D3 /* LifecycleStage.swift */,
+				5EA3D4431D15F5DA61CBFB3D /* Lineage.swift */,
 				ABD254F76D61401C7375893A /* NightSleep.swift */,
 				AC64044CE5BC2F17F75FCCF2 /* Personality.swift */,
 				E374AE18062D2E69651C1286 /* PersonalityBehavior.swift */,
@@ -145,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				EF6B33D52A313769168D692A /* Audio */,
+				773E8578934248614FA7103B /* Cursors */,
 				A8E9D617AF607DC7B272FF6F /* Sprites */,
 			);
 			path = Assets;
@@ -164,11 +243,20 @@
 			children = (
 				5FF7EC5F3F9178B5800550FC /* ActionAnimationOverlay.swift */,
 				464970C6F894F925C1B474F9 /* ActionIconView.swift */,
+				AD3BE40477D5B8ABBF89A01B /* CursorRect.swift */,
+				5752F2D0F5DCE5CB90B6C470 /* FarewellOverlay.swift */,
 				4B6C600840FE0220DA068AE4 /* HeaderIconView.swift */,
 				39E1E0640FEBB356A3052019 /* HeartsRow.swift */,
 				9C3F0AA55030B7F057AA7C77 /* ManagementPanel.swift */,
+				8E72C8C948E02047B7F70DD7 /* MemorialBookPanel.swift */,
+				0E3E9526D17F824DC0A35595 /* MemorialCardOverlay.swift */,
+				535CD707281FE928A0859E71 /* NightTintOverlay.swift */,
+				71421B7080EEAD2BDEF15626 /* OnboardingOverlay.swift */,
+				586963E99D0149981DA5ACEB /* PetCursors.swift */,
+				601F2B591952366AFF4B4321 /* PetHeadStatusOverlay.swift */,
 				46CF8B0FB3906BC908CB2ECB /* PoopView.swift */,
 				7AEABA289258E6E18698446C /* RoomView.swift */,
+				87C701A3198CC97C408F84DA /* SleepZzzOverlay.swift */,
 			);
 			path = Room;
 			sourceTree = "<group>";
@@ -211,6 +299,7 @@
 			buildPhases = (
 				6F153594A546454FF36CF2FB /* Sources */,
 				DCD6E006302711F9151D897C /* Resources */,
+				19421952A09097CB1EBEB822 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -218,6 +307,7 @@
 			);
 			name = NotchPet;
 			packageProductDependencies = (
+				26FFBD806974723E05DB4E4F /* Supabase */,
 			);
 			productName = NotchPet;
 			productReference = 27F84C91E830F0E76A9B1F1D /* NotchPet.app */;
@@ -246,6 +336,9 @@
 			);
 			mainGroup = EE3051F3E00987F454E38ACC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				87A0609770E3E195B3D9A57B /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 35AEE66FE43596EF90105CF7 /* Products */;
 			projectDirPath = "";
@@ -263,6 +356,7 @@
 			files = (
 				99217946E8B7E2FD5C35A81B /* Assets.xcassets in Resources */,
 				77C8E7CA8FA67FBD64868D34 /* Audio in Resources */,
+				4388D17A2D5042347C3B380E /* Cursors in Resources */,
 				98EF6B333EF80A7B74EAB89A /* Sprites in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -278,6 +372,11 @@
 				10925B542627B159CAEFE445 /* ActionIconView.swift in Sources */,
 				571ED883CFB70B26882CEEB8 /* AppDelegate.swift in Sources */,
 				B64E10A7B3F4D8577A3AE6D6 /* AppSettings.swift in Sources */,
+				1DD308D2A94ADA5F7F46FB0B /* AuthService.swift in Sources */,
+				FEBB0E4D7DFAD49A3C11A235 /* CloudModels.swift in Sources */,
+				9224C7E2688C8FC994C62D66 /* CloudSync.swift in Sources */,
+				62F212A83CEAB2DFD116759C /* CursorRect.swift in Sources */,
+				C5E0CE6E309AA3CEB911B944 /* FarewellOverlay.swift in Sources */,
 				AA38CA6702BB08E584D5E2C8 /* FirstMouseHostingView.swift in Sources */,
 				BB97D979818A67DA8EF17236 /* FurnitureCatalog.swift in Sources */,
 				0C9CE880F43AE5DFD287FD41 /* FurnitureSpriteLibrary.swift in Sources */,
@@ -285,26 +384,40 @@
 				6B72C56154DE778495D54EA9 /* HeartsRow.swift in Sources */,
 				40AD5CFCC1A3BBDAF99F05EF /* InventoryStore.swift in Sources */,
 				4649ECFDC3BA55490D3658E3 /* LifecycleStage.swift in Sources */,
+				9D2190DDB802CDE14BCC80DB /* Lineage.swift in Sources */,
 				D30A9F7486645997587236F7 /* ManagementPanel.swift in Sources */,
+				A8B251FC8D26A0361D013C51 /* MarriagePanel.swift in Sources */,
+				33CEA2678CC41617BFF32EEC /* MarriagePayload.swift in Sources */,
+				A4120C631766DEE9B67B7394 /* MemorialBookPanel.swift in Sources */,
+				AB261BD73301BED7F646A054 /* MemorialCardOverlay.swift in Sources */,
 				E092B50345929D7B2A293145 /* NightSleep.swift in Sources */,
+				F3EBC2E3BC728A1F72B7AED8 /* NightTintOverlay.swift in Sources */,
 				2F2E0DF10E1C13FBAD451DF4 /* NotchGeometry.swift in Sources */,
 				AC70CAC810BB96CD850A41B9 /* NotchPanel.swift in Sources */,
 				D868041C33FC2B76B0BC1E9B /* NotchPanelController.swift in Sources */,
 				AD6753DCC3ACCBCEBB9C49C2 /* NotchPetApp.swift in Sources */,
 				DF0DE8BAA17AC347FC714E10 /* NotchRootView.swift in Sources */,
+				177979C8FE9862019426F7FE /* OnboardingOverlay.swift in Sources */,
 				A05838EBE0D09E3EC0B8E133 /* Personality.swift in Sources */,
 				B4E0951C58178603F9906CE1 /* PersonalityBehavior.swift in Sources */,
 				BCFB5B4A403ABC888E6D4C4E /* PetBehaviorEngine.swift in Sources */,
+				0557B0FB0D71D6FE0978B2EA /* PetCursors.swift in Sources */,
+				EC4688C4D135C386C27298B8 /* PetHeadStatusOverlay.swift in Sources */,
 				A44DCED6E49C493C23551C47 /* PetSprite.swift in Sources */,
 				9B11623FDB832C6DB489D443 /* PetState.swift in Sources */,
 				C33F03FA77A95CBC8692CD24 /* PetStateStore.swift in Sources */,
 				7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */,
 				09DF0DCBADC938A360517A3E /* PlayerInventory.swift in Sources */,
 				50585BA54C67F3911B6F16F2 /* PoopView.swift in Sources */,
+				569605F5ED414361B75D1663 /* QRCodeRenderer.swift in Sources */,
+				E8D925CB628BF8C62CDEBABF /* QRScanWindowController.swift in Sources */,
 				0ECAB06FFF469D318E1E0CDF /* RoomTheme.swift in Sources */,
 				6D1FEB33E2BC451D86E8ECC9 /* RoomView.swift in Sources */,
+				86974DF88DCC8B00243538F0 /* SleepZzzOverlay.swift in Sources */,
 				BE95E98A82A334405FE82259 /* SoundPlayer.swift in Sources */,
 				A7DBDAE2F9D7F5B895BC591B /* StatusIconPixelView.swift in Sources */,
+				532684ECFD971922852C9924 /* SupabaseClientManager.swift in Sources */,
+				7D6AAC97E6300FD51CD8B73A /* SupabaseConfig.swift in Sources */,
 				5859B3040731092AA40DB3B3 /* TimeService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -503,6 +616,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		87A0609770E3E195B3D9A57B /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.20.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		26FFBD806974723E05DB4E4F /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 87A0609770E3E195B3D9A57B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E4AA1E363FE18703CBB51E63 /* Project object */;
 }

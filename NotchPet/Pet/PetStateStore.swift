@@ -18,17 +18,48 @@ struct PetStateSnapshot: Codable {
     let sick: Bool
     let medicineDosesRemaining: Int
     let sicknessCheckDueAt: Date?
-    let poops: Int
+    /// v5: individual piles with fixed positions. Decoded as nil from
+    /// older saves; see `init(from:)` fallback below for migration.
+    let poopPiles: [PoopPile]?
+    /// v3/v4 count-only field. Kept optional so v5 saves (which rely on
+    /// `poopPiles` instead) can omit it without breaking the decoder.
+    let poops: Int?
     let lastPoopAt: Date?
     let poopDueAt: Date?
     let ageActiveSeconds: Double
     let stage: LifecycleStage
     let departedAt: Date?
-    let elderHungerZeroSeconds: Double?
-    let elderHappyZeroSeconds: Double?
-    let elderSickSeconds: Double?
+    // Persisted under their historical JSON keys (elder*) so saves written
+    // before neglect-death applied at all stages still decode cleanly.
+    let hungerZeroSeconds: Double?
+    let happyZeroSeconds: Double?
+    let sickSeconds: Double?
     let personality: PersonalityTrait?
     let careHistory: CareHistory
+    // v4: marriage + breeding. All optional; nil = pet is single /
+    // childless. Old v3 state.json will decode these as nil cleanly
+    // because Swift's synthesized Codable treats missing keys for
+    // Optional properties as nil.
+    let partner: PartnerSnapshot?
+    let marriedAt: Date?
+    let pendingEgg: PendingEgg?
+    let pendingBaby: PendingBaby?
+    let babyHatchedAtAge: Double?
+    let parents: [UUID]?
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, id, name, bornAt, generation, species
+        case hunger, happy, weight, isAsleep, lastTickAt
+        case sick, medicineDosesRemaining, sicknessCheckDueAt
+        case poops, poopPiles, lastPoopAt, poopDueAt
+        case ageActiveSeconds, stage, departedAt
+        case hungerZeroSeconds = "elderHungerZeroSeconds"
+        case happyZeroSeconds = "elderHappyZeroSeconds"
+        case sickSeconds = "elderSickSeconds"
+        case personality, careHistory
+        case partner, marriedAt, pendingEgg, pendingBaby
+        case babyHatchedAtAge, parents
+    }
 
     @MainActor
     init(from state: PetState) {
@@ -46,17 +77,34 @@ struct PetStateSnapshot: Codable {
         self.sick = state.sick
         self.medicineDosesRemaining = state.medicineDosesRemaining
         self.sicknessCheckDueAt = state.sicknessCheckDueAt
-        self.poops = state.poops
+        self.poopPiles = state.poopPiles
+        self.poops = nil  // superseded by poopPiles in v5+
         self.lastPoopAt = state.lastPoopAt
         self.poopDueAt = state.poopDueAt
         self.ageActiveSeconds = state.ageActiveSeconds
         self.stage = state.stage
         self.departedAt = state.departedAt
-        self.elderHungerZeroSeconds = state.elderHungerZeroSeconds
-        self.elderHappyZeroSeconds = state.elderHappyZeroSeconds
-        self.elderSickSeconds = state.elderSickSeconds
+        self.hungerZeroSeconds = state.hungerZeroSeconds
+        self.happyZeroSeconds = state.happyZeroSeconds
+        self.sickSeconds = state.sickSeconds
         self.personality = state.personality
         self.careHistory = state.careHistory
+        self.partner = state.partner
+        self.marriedAt = state.marriedAt
+        self.pendingEgg = state.pendingEgg
+        self.pendingBaby = state.pendingBaby
+        self.babyHatchedAtAge = state.babyHatchedAtAge
+        self.parents = state.parents
+    }
+
+    /// Resolve poop piles for materialization. Prefer v5 positions when
+    /// present; otherwise synthesize placeholder piles at x=0 from the
+    /// old integer count so an upgrading user doesn't lose their "pet
+    /// needs cleaning" state.
+    private func materializedPoopPiles() -> [PoopPile] {
+        if let piles = poopPiles { return piles }
+        let count = max(0, min(3, poops ?? 0))
+        return (0..<count).map { _ in PoopPile(xOffset: 0) }
     }
 
     @MainActor
@@ -75,17 +123,23 @@ struct PetStateSnapshot: Codable {
             sick: sick,
             medicineDosesRemaining: medicineDosesRemaining,
             sicknessCheckDueAt: sicknessCheckDueAt,
-            poops: poops,
+            poopPiles: materializedPoopPiles(),
             lastPoopAt: lastPoopAt,
             poopDueAt: poopDueAt,
             ageActiveSeconds: ageActiveSeconds,
             stage: stage,
             departedAt: departedAt,
-            elderHungerZeroSeconds: elderHungerZeroSeconds ?? 0,
-            elderHappyZeroSeconds: elderHappyZeroSeconds ?? 0,
-            elderSickSeconds: elderSickSeconds ?? 0,
+            hungerZeroSeconds: hungerZeroSeconds ?? 0,
+            happyZeroSeconds: happyZeroSeconds ?? 0,
+            sickSeconds: sickSeconds ?? 0,
             personality: personality,
-            careHistory: careHistory
+            careHistory: careHistory,
+            partner: partner,
+            marriedAt: marriedAt,
+            pendingEgg: pendingEgg,
+            pendingBaby: pendingBaby,
+            babyHatchedAtAge: babyHatchedAtAge,
+            parents: parents
         )
     }
 }
@@ -113,7 +167,7 @@ private struct PetStateSnapshotV2: Codable {
 /// JSON persistence for PetState under ~/Library/Application Support.
 @MainActor
 final class PetStateStore {
-    nonisolated static let currentSchema: Int = 4
+    nonisolated static let currentSchema: Int = 5
 
     private let fileURL: URL
 
@@ -133,7 +187,7 @@ final class PetStateStore {
     /// their pet forward.
     func load() -> PetState {
         guard let data = try? Data(contentsOf: fileURL) else {
-            return PetState()
+            return PetState(species: Self.randomSpecies())
         }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -168,7 +222,7 @@ final class PetStateStore {
                 sick: false,
                 medicineDosesRemaining: 0,
                 sicknessCheckDueAt: nil,
-                poops: 0,
+                poopPiles: [],
                 lastPoopAt: nil,
                 poopDueAt: nil,
                 ageActiveSeconds: v2.ageActiveSeconds,
@@ -182,13 +236,17 @@ final class PetStateStore {
         }
 
         // Unknown schema / parse error — start fresh
-        return PetState()
+        return PetState(species: Self.randomSpecies())
     }
 
     /// Map a v2 0.0–1.0 float vital onto a discrete 0–4 heart count.
     private static func floatToHearts(_ value: Double) -> Int {
         let hearts = Int((value * Double(PetState.maxHearts)).rounded())
         return max(0, min(PetState.maxHearts, hearts))
+    }
+
+    private static func randomSpecies() -> Species {
+        Species.allCases.randomElement() ?? .chick
     }
 
     func save(_ state: PetState) {

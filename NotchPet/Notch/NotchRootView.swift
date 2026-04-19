@@ -16,11 +16,19 @@ struct NotchRootView: View {
     /// builds the hosting view; invoked by action buttons (and by
     /// departed transitions via a separate Notification path).
     let onShake: (NotchPanelController.ShakeIntensity) -> Void
+    /// Passed down to inline editors (e.g. the pet-name field) so they
+    /// can ask the panel to temporarily accept keyboard focus.
+    let onKeyboardFocusRequest: (Bool) -> Void
 
     var body: some View {
         ZStack {
             if uiState.isExpanded {
-                RoomView(petState: petState, inventory: inventory, onShake: onShake)
+                RoomView(
+                    petState: petState,
+                    inventory: inventory,
+                    onShake: onShake,
+                    onKeyboardFocusRequest: onKeyboardFocusRequest
+                )
                     .transition(.opacity)
             } else {
                 CollapsedNotchView(petState: petState, sideExtension: sideExtension)
@@ -31,6 +39,9 @@ struct NotchRootView: View {
         .background(Color.black)
         .clipShape(NotchClipShape(cornerRadius: uiState.isExpanded ? 18 : 10))
         .ignoresSafeArea()
+        .onChange(of: uiState.isExpanded) { _, nowExpanded in
+            if nowExpanded { petState.greet() }
+        }
     }
 }
 

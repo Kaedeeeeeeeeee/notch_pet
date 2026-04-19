@@ -21,6 +21,12 @@ final class NotchPanelController: NSObject {
     private var globalClickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
     private var shakeTask: Task<Void, Never>?
+    /// 30 Hz timer that polls the mouse cursor against the pet hit rect
+    /// while the panel is expanded. Polling is the reliable path — built-in
+    /// tracking / hover machinery doesn't fire consistently in a
+    /// non-activating panel, even with `acceptsMouseMovedEvents = true`.
+    private var cursorPollTimer: Timer?
+    private var isShowingPetCursor: Bool = false
 
     /// The built-in MacBook screen that physically owns the notch. Resolved
     /// once at init; re-resolved on screen change so external display
@@ -91,6 +97,9 @@ final class NotchPanelController: NSObject {
             sideExtension: Self.sideExtension,
             onShake: { [weak self] intensity in
                 self?.shake(intensity)
+            },
+            onKeyboardFocusRequest: { [weak self] active in
+                self?.setKeyboardFocusActive(active)
             }
         )
         let host = FirstMouseHostingView(rootView: root)
@@ -127,6 +136,7 @@ final class NotchPanelController: NSObject {
         petState.isHovered = false
         animateFrame(to: expandedFrame())
         installDismissMonitors()
+        startCursorPolling()
     }
 
     func collapse() {
@@ -134,6 +144,7 @@ final class NotchPanelController: NSObject {
         removeDismissMonitors()
         uiState.isExpanded = false
         animateFrame(to: collapsedFrame(hovered: uiState.isHovered))
+        stopCursorPolling()
     }
 
     private func animateFrame(to frame: NSRect, duration: TimeInterval = 0.28) {
@@ -141,6 +152,77 @@ final class NotchPanelController: NSObject {
             ctx.duration = duration
             ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             panel.animator().setFrame(frame, display: true)
+        }
+    }
+
+    // MARK: - Custom cursor polling
+    //
+    // A non-activating panel doesn't reliably deliver mouseMoved events
+    // to child views — tracking areas and SwiftUI `.onHover` both go dark.
+    // We bypass the event layer entirely and poll the global mouse
+    // position against a computed pet rect. Simple, cheap, always works.
+
+    private func startCursorPolling() {
+        stopCursorPolling()
+        let t = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.pollCursor() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        cursorPollTimer = t
+    }
+
+    private func stopCursorPolling() {
+        cursorPollTimer?.invalidate()
+        cursorPollTimer = nil
+        if isShowingPetCursor {
+            NSCursor.arrow.set()
+            isShowingPetCursor = false
+        }
+    }
+
+    /// Screen-space center of the pet sprite, given current panel frame
+    /// and pet offsets. RoomView layout is a fixed VStack (header / spacer
+    /// / pet / spacer / hearts / actions), so the pet's vertical centre
+    /// from the top of the expanded 540×400 panel is stable — tuned by
+    /// eye to land on the sprite.
+    private static let petYFromPanelTop: CGFloat = 190
+    /// Half-size of the square hit area around the pet (`RoomView.petHitSize`).
+    private static let petHitRadius: CGFloat = 42
+
+    private func pollCursor() {
+        guard uiState.isExpanded, panel.isVisible else { return }
+
+        let frame = panel.frame
+        let mouse = NSEvent.mouseLocation
+
+        // Pet centre in screen coords (NSEvent uses bottom-left origin,
+        // panel.frame.maxY is the top edge of the panel in screen coords).
+        let petScreenX = frame.origin.x + frame.width / 2 + petState.petX
+        let petScreenY = frame.maxY - Self.petYFromPanelTop - petState.petY
+
+        let dx = abs(mouse.x - petScreenX)
+        let dy = abs(mouse.y - petScreenY)
+        let inside = dx < Self.petHitRadius && dy < Self.petHitRadius
+
+        if inside && petState.canInteract {
+            PetCursors.shared.cursor(for: petState).set()
+            isShowingPetCursor = true
+        } else if isShowingPetCursor {
+            NSCursor.arrow.set()
+            isShowingPetCursor = false
+        }
+    }
+
+    // MARK: - Keyboard focus
+
+    /// Allow / disallow the panel to accept keystrokes. Called by SwiftUI
+    /// views that host an inline text editor (e.g. the pet-name field in
+    /// the room). Without this the non-activating panel never becomes
+    /// key and `TextField` input is silently dropped.
+    func setKeyboardFocusActive(_ active: Bool) {
+        panel.acceptsKeyboardFocus = active
+        if active {
+            panel.makeKey()
         }
     }
 

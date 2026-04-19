@@ -37,6 +37,7 @@ All timing constants have env-var overrides and fast DEBUG defaults so a full li
 | `NOTCHPET_NEGLECT_SEC` | 15s | 120s | Seconds at 0 vitals before sickness |
 | `NOTCHPET_POOP_SICK_SEC` | 20s | 180s | Seconds poop sits before causing sickness |
 | `NOTCHPET_DECAY_SPEEDUP` | 1.0 | 1.0 | Global multiplier on all decay |
+| `NOTCHPET_NEWBORN_GRACE_SEC` | 10s | 3600s | Active grace after hatch before night sleep applies |
 | `NOTCHPET_ELDER_HUNGER_DEATH` | 10s | 43200s | Elder starvation death threshold |
 | `NOTCHPET_ELDER_HAPPY_DEATH` | 20s | 86400s | Elder sadness death threshold |
 | `NOTCHPET_ELDER_SICK_DEATH` | 20s | 86400s | Elder sickness death threshold |

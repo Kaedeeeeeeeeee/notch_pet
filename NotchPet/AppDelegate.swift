@@ -43,6 +43,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.inventory = inventory
         self.timeService = timeService
         self.panelController = controller
+
+        // v2: cloud sync. Anonymous sign-in on first launch, then pull
+        // any existing cloud state (Apple-linked users coming from
+        // another device). All best-effort; offline launches work fine.
+        Task { @MainActor in
+            await AuthService.shared.ensureAuthed()
+            await CloudSync.shared.pullOnStart(localState: petState, store: store)
+            await CloudSync.shared.pushPet(petState)  // seed row for new users
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

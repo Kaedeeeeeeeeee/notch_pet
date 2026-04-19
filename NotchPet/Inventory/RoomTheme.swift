@@ -46,7 +46,10 @@ struct RoomThemeBackground: View {
 private struct DefaultBackground: View {
     var body: some View {
         GeometryReader { geo in
-            let floorHeight = geo.size.height * 0.26
+            // Kept in sync with `RoomGeometry.floorRatio` in RoomView.swift —
+            // pet + furniture anchor to `1 - floorRatio`, so the visible
+            // band height must match for feet to meet the floor seam.
+            let floorHeight = geo.size.height * 0.30
             ZStack {
                 // Base wall — cream plaster
                 Color(red: 0.94, green: 0.90, blue: 0.82)
@@ -189,7 +192,8 @@ private struct WindowPixel: View {
 private struct WashitsuBackground: View {
     var body: some View {
         GeometryReader { geo in
-            let floorHeight = geo.size.height * 0.28
+            // Kept in sync with `RoomGeometry.floorRatio` (see RoomView.swift).
+            let floorHeight = geo.size.height * 0.30
             ZStack {
                 // Sand plaster wall
                 Color(red: 0.92, green: 0.86, blue: 0.74)

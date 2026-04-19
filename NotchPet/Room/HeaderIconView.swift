@@ -7,7 +7,7 @@ struct HeaderIconView: View {
     let size: CGFloat
 
     enum Kind {
-        case settings, shop, coin, volume, shake, language
+        case settings, shop, coin, volume, shake, language, ring
     }
 
     var body: some View {
@@ -41,6 +41,7 @@ struct HeaderIconView: View {
         case .volume:   return volumePixels
         case .shake:    return shakePixels
         case .language: return languagePixels
+        case .ring:     return ringPixels
         }
     }
 
@@ -251,6 +252,44 @@ struct HeaderIconView: View {
             case 1: return outline
             case 2: return ocean
             case 3: return hi
+            default: return nil
+            }
+        }
+    }()
+
+    // MARK: - Ring (wedding)
+
+    /// Gold band + pink gem on top — shown when the pet is adult and
+    /// single. 12x12.
+    /// 0=transparent 1=outline 2=gold 3=gold-hi 4=gem 5=gem-hi
+    private static let ringShape: [[Int]] = [
+        [0,0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,1,4,5,1,0,0,0,0],
+        [0,0,0,0,1,4,4,1,0,0,0,0],
+        [0,0,0,1,2,3,2,2,1,0,0,0],
+        [0,0,1,2,3,2,2,2,2,1,0,0],
+        [0,1,2,2,2,2,2,2,2,2,1,0],
+        [0,1,2,2,2,2,2,2,2,2,1,0],
+        [0,1,2,2,2,2,2,2,2,2,1,0],
+        [0,0,1,2,2,2,2,2,2,1,0,0],
+        [0,0,0,1,1,2,2,1,1,0,0,0],
+        [0,0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0],
+    ]
+
+    private static let ringPixels: [(Int, Int, Color)] = {
+        let outline = Color(red: 0.40, green: 0.28, blue: 0.10)
+        let gold    = Color(red: 0.95, green: 0.78, blue: 0.35)
+        let goldHi  = Color(red: 1.00, green: 0.92, blue: 0.55)
+        let gem     = Color(red: 0.92, green: 0.42, blue: 0.55)
+        let gemHi   = Color(red: 1.00, green: 0.75, blue: 0.85)
+        return build(ringShape) {
+            switch $0 {
+            case 1: return outline
+            case 2: return gold
+            case 3: return goldHi
+            case 4: return gem
+            case 5: return gemHi
             default: return nil
             }
         }

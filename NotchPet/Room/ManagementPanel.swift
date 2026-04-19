@@ -357,7 +357,12 @@ private struct ClothesTab: View {
 
 struct SettingsPanel: View {
     @Binding var isShowing: Bool
+    /// Called when the user taps "Open Memorial Book". RoomView closes
+    /// this panel and flips a separate state flag.
+    var onOpenMemorial: () -> Void = {}
     @ObservedObject private var settings = AppSettings.shared
+    @State private var signInBusy: Bool = false
+    @State private var signInError: String? = nil
 
     private var lang: AppLanguage { settings.language }
 
@@ -446,6 +451,11 @@ struct SettingsPanel: View {
 
             Spacer().frame(height: 8)
 
+            // Account + Memorial Book
+            accountSection
+
+            Spacer().frame(height: 8)
+
             // Quit
             Button {
                 NSApp.terminate(nil)
@@ -481,6 +491,131 @@ struct SettingsPanel: View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(fill)
             )
+    }
+
+    // MARK: - Account section
+
+    @ViewBuilder
+    private var accountSection: some View {
+        // Section label
+        HStack {
+            Text(lang.accountSectionLabel)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.55))
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, 4)
+        .padding(.bottom, 2)
+
+        // Signed-in status / action
+        if settings.isAppleLinked {
+            settingsRow(Color.white.opacity(0.06)) {
+                HStack(spacing: 8) {
+                    Text("✅")
+                        .font(.system(size: 12))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(lang.signedInAsLabel)
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.white)
+                        Text(settings.userEmail ?? "Apple ID")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                    Spacer()
+                    Button {
+                        Task { await AuthService.shared.signOut() }
+                    } label: {
+                        Text(lang.signOutLabel)
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.white.opacity(0.14))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        } else {
+            Button {
+                signInBusy = true
+                signInError = nil
+                Task {
+                    do {
+                        try await AuthService.shared.signInWithApple()
+                    } catch AuthService.AuthError.cancelled {
+                        // user bailed — silent
+                    } catch {
+                        signInError = error.localizedDescription
+                    }
+                    signInBusy = false
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Text("")   // Apple logo glyph
+                        .font(.system(size: 12))
+                    Text(lang.signInWithAppleLabel)
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    if signInBusy {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 12, height: 12)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.white.opacity(0.12))
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(signInBusy)
+
+            if let err = signInError {
+                Text(err)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.red.opacity(0.85))
+                    .padding(.horizontal, 14)
+            } else {
+                Text(lang.syncCloudHint)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .padding(.horizontal, 14)
+                    .padding(.top, 2)
+            }
+        }
+
+        // Memorial Book entry
+        Button {
+            isShowing = false
+            onOpenMemorial()
+        } label: {
+            HStack(spacing: 8) {
+                Text("📖")
+                    .font(.system(size: 12))
+                Text(lang.memorialBookOpenLabel)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                Spacer()
+                Text("›")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.white.opacity(0.06))
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 4)
     }
 }
 

@@ -17,6 +17,7 @@ struct StatusIconPixelView: View {
         case departed
         case sick
         case poop      // Block 6: at least one poop on the floor
+        case fly       // used above pet head when poop is around
     }
 
     var body: some View {
@@ -53,6 +54,7 @@ struct StatusIconPixelView: View {
         case .departed:  return Color(red: 0.74, green: 0.70, blue: 0.62)
         case .sick:      return Color(red: 0.82, green: 0.52, blue: 0.72)
         case .poop:      return Color(red: 0.55, green: 0.35, blue: 0.20)
+        case .fly:       return Color(red: 0.25, green: 0.25, blue: 0.25)
         }
     }
 
@@ -68,6 +70,7 @@ struct StatusIconPixelView: View {
         case .departed:  return ghostCells
         case .sick:      return sickCells
         case .poop:      return poopCells
+        case .fly:       return flyCells
         }
     }
 
@@ -202,6 +205,28 @@ struct StatusIconPixelView: View {
         [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
         [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
         [0,0,0,0,1,0,1,0,1,0,1,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ])
+
+    /// Tiny pixel fly — horizontal body with a pair of wings sticking
+    /// out. Used above the pet's head when there's poop around but no
+    /// more urgent vital alert.
+    private static let flyCells: [(Int, Int)] = unpack([
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
