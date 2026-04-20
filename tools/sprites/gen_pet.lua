@@ -10,7 +10,14 @@
 -- Run via tools/sprites/build_sprites.sh from repo root.
 
 local OUTPUT = "tools/sprites/pet.aseprite"
+-- Art grid stays 16×16 (the pixel sprites themselves).
 local SIDE = 16
+-- Render canvas is larger so vertical-motion animations (bounce airborne
+-- = -3px, held/sit = +3px) and leanX (±2px) never clip the sprite's
+-- head/feet/sides. 5px of transparent padding on every side gives every
+-- animation ample headroom. The 16×16 art is centred within this box.
+local CANVAS = 26
+local OFFSET = 5
 
 ------------------------------------------------------------------
 -- Colors (shared palette)
@@ -47,7 +54,7 @@ local function applyTint(c, tint, dimK)
     }
 end
 
-local function inBounds(x, y) return x >= 0 and x < SIDE and y >= 0 and y < SIDE end
+local function inBounds(x, y) return x >= 0 and x < CANVAS and y >= 0 and y < CANVAS end
 
 -- Personality tints — shared across all species (subtle)
 local PERS_TINT = {
@@ -277,43 +284,46 @@ local function frogCellColor(cell, tint, dimK)
 end
 
 --================================================================
--- SNAKE — 🐍-style coiled pile: head poking up from the top of a
--- 2-tier body coil, two forward-facing eyes clearly separated, red
--- forked tongue flicking downward out of the mouth. Reads like the
--- emoji — a snake piled on the ground.
+-- SNAKE — reference-driven (Snake-game head + coiled body). Big
+-- expressive head with 2×2 eyes featuring clear eye-whites + pupils,
+-- Y-shaped forked red tongue, coiled body with alternating scale
+-- bands (inspired by opengameart Snake_sprite_sheet.png). Big head
+-- is what gives instant snake-recognition at tiny size.
 --================================================================
 -- Cell: 1=body 2=outline 3=highlight 4=belly-peek
 --       5=tongue-red 6=eye-white 7=eye-pupil 8=cheek 9=dark-scales
 local SNAKE_BASE = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1 (y=0)
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  2 (y=1)
-    {0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0},  --  3 (y=2) head crown
-    {0,0,0,0,0,2,3,3,3,3,2,0,0,0,0,0},  --  4 (y=3) head widens
-    {0,0,0,0,0,2,6,7,7,6,2,0,0,0,0,0},  --  5 (y=4) two clearly separated eyes
-    {0,0,0,0,0,2,3,3,3,3,2,0,0,0,0,0},  --  6 (y=5) cheeks
-    {0,0,0,0,0,0,2,5,5,2,0,0,0,0,0,0},  --  7 (y=6) open mouth + tongue base
-    {0,0,0,0,0,5,0,0,0,0,5,0,0,0,0,0},  --  8 (y=7) tongue fork tips flicking
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0},  --  9 (y=8) top coil outer rim
-    {0,0,2,3,1,1,1,1,1,1,1,1,1,3,2,0},  -- 10 (y=9) top coil body
-    {0,2,3,1,9,9,9,9,9,9,9,9,9,1,3,2},  -- 11 (y=10) scale band across top coil
-    {2,3,1,9,1,1,1,1,1,1,1,1,1,9,1,3},  -- 12 (y=11) widest coil — inner gap starts
-    {2,3,1,9,1,2,2,2,2,2,2,1,1,9,1,3},  -- 13 (y=12) inner coil boundary
-    {2,3,1,9,1,2,3,4,4,3,2,1,9,9,1,3},  -- 14 (y=13) belly peek through coil center
-    {0,2,2,1,9,1,2,2,2,2,1,9,9,1,2,2},  -- 15 (y=14) lower coil closes around
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0},  -- 16 (y=15) ground rim
+    {0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0},  --  2 (y=1) head crown (6 wide)
+    {0,0,0,0,2,3,3,3,3,3,3,2,0,0,0,0},  --  3 (y=2) head widens
+    {0,0,0,2,3,6,6,3,3,6,6,3,2,0,0,0},  --  4 (y=3) 2×2 eye whites
+    {0,0,0,2,3,6,7,3,3,7,6,3,2,0,0,0},  --  5 (y=4) pupils (inner = looking fwd)
+    {0,0,0,2,3,3,3,3,3,3,3,3,2,0,0,0},  --  6 (y=5) chin
+    {0,0,0,0,2,3,1,5,5,1,3,2,0,0,0,0},  --  7 (y=6) open mouth + tongue base
+    {0,0,0,0,0,2,5,2,2,5,2,0,0,0,0,0},  --  8 (y=7) Y-forked tongue tips
+    -- === Upper coil (smaller, sitting on top) ===
+    {0,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0},  --  9 (y=8) upper coil top (10 wide)
+    {0,0,2,3,1,9,9,9,9,9,9,1,3,2,0,0},  -- 10 (y=9) upper scales (12 wide)
+    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},  -- 11 (y=10) tier seam (bottom of upper)
+    -- === Lower coil (wider, supports the upper) ===
+    {0,2,3,1,1,1,1,1,1,1,1,1,1,3,2,0},  -- 12 (y=11) lower coil top body (14)
+    {2,3,1,9,9,9,9,9,9,9,9,9,9,1,3,2},  -- 13 (y=12) lower scales (16 wide)
+    {2,3,1,1,1,1,1,1,1,1,1,1,1,1,3,2},  -- 14 (y=13) lower body
+    {0,2,2,4,4,4,4,4,4,4,4,4,4,2,2,0},  -- 15 (y=14) yellow belly
+    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},  -- 16 (y=15) ground
 }
 local SNAKE_EXPR = {
     cheerful = {},
-    -- shy: both eyes close to slits + blush on cheeks
-    shy      = { {5,7,2},{5,8,2},{5,9,2},{5,10,2}, {6,6,8},{6,11,8} },
-    -- aloof: both pupils shift outward (looking away, not at viewer)
-    aloof    = { {5,7,7},{5,8,6},{5,9,6},{5,10,7} },
-    -- gluttonous: tongue extended further down with bigger fork
-    gluttonous = { {9,6,5},{9,11,5}, {8,7,5},{8,10,5} },
-    -- lazy: signature flat-coil takes over, but keep a half-lidded fallback
-    lazy     = { {5,7,3},{5,8,3},{5,9,3},{5,10,3} },
-    -- grumpy: dark brow ridge above both eyes
-    grumpy   = { {4,7,2},{4,8,2},{4,9,2},{4,10,2} },
+    -- shy: close both eyes to slits (all 8 eye cells → outline)
+    shy      = { {4,6,2},{4,7,2},{4,10,2},{4,11,2},{5,6,2},{5,7,2},{5,10,2},{5,11,2} },
+    -- aloof: swap pupil/white so pupils face outward (looking away)
+    aloof    = { {5,6,7},{5,7,6},{5,10,6},{5,11,7} },
+    -- gluttonous: widen tongue to 4px wide
+    gluttonous = { {7,7,5},{7,10,5} },
+    -- lazy: top row of eyes becomes highlight (droopy upper lids)
+    lazy     = { {4,6,3},{4,7,3},{4,10,3},{4,11,3} },
+    -- grumpy: dark brow line just above each eye
+    grumpy   = { {3,6,2},{3,7,2},{3,10,2},{3,11,2} },
 }
 local function snakeCellColor(cell, tint, dimK)
     if cell == 1 then return applyTint(C(105,185,75),  tint, dimK) -- body green
@@ -329,35 +339,47 @@ local function snakeCellColor(cell, tint, dimK)
 end
 
 --================================================================
--- TURTLE — front view: domed shell + round head + two front legs
+-- TURTLE — reference-driven (opengameart 16x16 animated turtle):
+-- very horizontal body with SMALL shell (3-4 rows), clear yellow
+-- belly + 2 visible legs poking down, head bumping out front-right.
+-- Shell is now ~25% of height rather than 44% — this is what stops
+-- it reading as a mushroom.
 --================================================================
 -- Cell: 1=skin(green) 2=outline 3=skin-highlight 4=shell-highlight
 --       5=mouth/nose 6=eye-white 7=eye-pupil 8=cheek 9=shell-body
 local TURTLE_BASE = {
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1
-    {0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0},  --  2 shell dome peak
-    {0,0,0,0,2,2,9,4,4,9,2,2,0,0,0,0},  --  3
-    {0,0,0,2,9,4,9,9,9,9,4,9,2,0,0,0},  --  4
-    {0,0,2,9,4,9,9,4,4,9,9,4,9,2,0,0},  --  5 shell pattern band
-    {0,2,9,9,9,9,4,9,9,4,9,9,9,9,2,0},  --  6 max width
-    {0,2,9,4,9,4,9,9,9,9,4,9,4,9,2,0},  --  7
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},  --  8 shell rim (horizontal)
-    {0,0,0,0,2,3,6,7,3,7,6,3,2,0,0,0},  --  9 head peeks out + eyes
-    {0,0,0,0,2,3,3,3,3,3,3,3,2,0,0,0},  -- 10 face
-    {0,0,0,0,2,3,1,5,5,1,3,3,2,0,0,0},  -- 11 mouth (5)
-    {0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0},  -- 12 chin
-    {0,0,2,2,1,0,0,0,0,0,0,1,2,2,0,0},  -- 13 front legs
-    {0,0,2,1,1,0,0,0,0,0,0,1,1,2,0,0},  -- 14 legs
-    {0,0,2,2,0,0,0,0,0,0,0,0,2,2,0,0},  -- 15 feet
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  -- 16
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1 (y=0)
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  2 (y=1)
+    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},  --  3 (y=2) shell peak (7 wide)
+    {0,0,0,2,9,4,4,4,4,4,9,2,0,0,0,0},  --  4 (y=3) shell row 2
+    {0,0,2,9,4,9,9,4,9,4,9,9,2,0,0,0},  --  5 (y=4) shell row 3
+    {0,0,2,9,4,4,9,9,4,9,9,4,2,0,0,0},  --  6 (y=5) shell row 4 — EXTRA for thickness
+    {0,0,2,2,2,2,2,2,2,2,2,2,2,0,0,0},  --  7 (y=6) shell rim
+    -- === NECK outline at x=10 clearly separates body (x=3-9) from head (x=11-15) ===
+    -- === Plastron (9/4 shell pattern) on belly row ===
+    -- === Tail (left): extends all the way to x=0 ===
+    {0,0,0,1,1,1,1,1,1,1,2,2,2,2,2,0},  --  8 (y=7) body + NECK + head top outline
+    {0,0,0,1,1,1,1,1,1,1,2,1,1,3,3,2},  --  9 (y=8) body + NECK + head body + hl
+    {0,2,2,1,1,1,1,1,1,1,2,1,1,6,7,2},  -- 10 (y=9) tail top outline + body + NECK + eye
+    {2,1,1,1,1,1,1,1,1,1,2,1,1,6,7,2},  -- 11 (y=10) tail body + body + NECK + eye row 2
+    {0,2,2,4,9,4,9,4,9,4,2,1,1,3,5,2},  -- 12 (y=11) tail close + PLASTRON + NECK + mouth
+    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,0},  -- 13 (y=12) body underline + head closure
+    {0,0,0,2,1,2,0,0,0,0,2,1,2,0,0,0},  -- 14 (y=13) legs (back + front)
+    {0,0,0,2,1,2,0,0,0,0,2,1,2,0,0,0},  -- 15 (y=14) legs
+    {0,0,0,2,2,2,0,0,0,0,2,2,2,0,0,0},  -- 16 (y=15) feet on ground
 }
 local TURTLE_EXPR = {
     cheerful = {},
-    shy      = {}, -- handled by SIGNATURE (head fully retracted)
-    aloof    = { {9,6,2},{9,10,2}, {9,7,1},{9,9,1} },
-    gluttonous = { {11,6,5},{11,7,5},{11,9,5},{11,10,5} },
-    lazy     = { {9,7,3},{9,8,3},{9,9,3} }, -- half-closed eyes
-    grumpy   = { {8,5,2},{8,6,2},{8,9,2},{8,10,2} }, -- furrowed brow
+    -- shy handled by SIGNATURE (all retracted)
+    shy      = {},
+    -- aloof: top row of eye becomes highlight (half-lidded, looking away)
+    aloof    = { {10,14,3},{10,15,3} },
+    -- gluttonous: extend mouth one pixel left
+    gluttonous = { {12,14,5} },
+    -- lazy: both rows of eye dimmed (sleepy)
+    lazy     = { {10,14,3},{10,15,3},{11,14,3},{11,15,3} },
+    -- grumpy: dark brow above eye (row 9 = y=8, just above eye at y=9)
+    grumpy   = { {9,14,2},{9,15,2} },
 }
 local function turtleCellColor(cell, tint, dimK)
     if cell == 1 then return applyTint(C(140,180,110), tint, dimK)    -- skin green
@@ -373,35 +395,38 @@ local function turtleCellColor(cell, tint, dimK)
 end
 
 --================================================================
--- SNAIL — side view: spiral shell on the back, foot below, head on right
+-- SNAIL — reference-driven (opengameart snail pack): shell DOMINATES
+-- (~60% of sprite), clear 2-ring spiral pattern with center dot,
+-- small body sticking out with just a tiny eye (no tall antennae).
+-- This shell-first proportion is what reads as "snail" instantly.
 --================================================================
 -- Cell: 1=body-pink 2=outline 3=body-highlight 4=shell-highlight
 --       5=mouth-dot 6=eye-white 7=eye-pupil 8=cheek 9=shell-body
 local SNAIL_BASE = {
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1
-    {0,0,0,0,0,0,0,0,0,0,0,0,2,0,2,0},  --  2 antenna tips (eyes on stalks)
-    {0,0,0,0,0,0,0,0,0,0,0,0,2,0,2,0},  --  3
-    {0,0,0,0,0,2,2,2,2,0,0,0,2,0,2,0},  --  4 shell top + antennae
-    {0,0,0,2,2,9,4,4,9,2,2,0,2,2,2,0},  --  5 shell starts
-    {0,0,2,9,4,9,9,4,9,4,9,2,0,0,0,0},  --  6 outer spiral
-    {0,2,9,4,9,2,2,9,4,9,9,9,2,0,0,0},  --  7
-    {0,2,9,9,2,4,3,2,9,9,4,9,2,0,0,0},  --  8 spiral center
-    {0,2,9,4,2,9,2,4,2,9,9,4,2,0,0,0},  --  9
-    {0,2,9,9,9,2,9,2,9,4,9,9,2,0,0,0},  -- 10
-    {0,0,2,9,9,9,4,9,9,9,9,2,0,0,0,0},  -- 11 shell bottom curve
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},  -- 12 shell rim + body line
-    {2,3,3,1,1,1,1,1,1,1,1,1,3,6,7,2},  -- 13 body + head eye on right
-    {2,1,1,8,1,1,1,1,1,1,1,1,3,1,5,2},  -- 14 cheek (8) + mouth (5) on face
-    {2,2,4,4,4,4,4,4,4,4,4,4,4,4,2,2},  -- 15 foot underside
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  -- 16
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1 (y=0)
+    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},  --  2 (y=1) shell top
+    {0,0,0,2,9,4,4,4,4,4,9,2,0,0,0,0},  --  3 (y=2)
+    {0,0,2,9,4,2,2,2,2,2,4,9,2,0,0,0},  --  4 (y=3) outer ring + inner starts
+    {0,2,9,4,2,9,4,4,9,2,4,9,2,0,0,0},  --  5 (y=4)
+    {0,2,9,4,2,9,3,9,9,2,4,9,2,0,0,0},  --  6 (y=5) center highlight (3)
+    {0,2,9,4,2,9,9,9,9,2,4,9,2,0,0,0},  --  7 (y=6)
+    {0,2,9,4,2,2,2,2,2,2,4,9,2,0,0,0},  --  8 (y=7) inner ring close
+    {0,2,9,4,4,4,4,4,4,4,4,9,2,0,0,0},  --  9 (y=8)
+    {0,0,2,9,9,9,9,9,9,9,9,2,0,0,0,0},  -- 10 (y=9) shell bottom curve
+    {0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0},  -- 11 (y=10) shell rim
+    {0,2,3,1,1,1,1,1,1,1,1,1,1,1,3,2},  -- 12 (y=11) body top + head right
+    {2,1,1,8,1,1,1,1,1,1,1,1,1,6,7,2},  -- 13 (y=12) body + cheek + eye
+    {2,1,1,1,1,1,1,1,1,1,1,1,1,1,5,2},  -- 14 (y=13) body + mouth
+    {2,2,1,1,1,1,1,1,1,1,1,1,1,1,2,2},  -- 15 (y=14) body outline
+    {0,2,4,4,4,4,4,4,4,4,4,4,4,4,2,0},  -- 16 (y=15) foot underside on ground
 }
 local SNAIL_EXPR = {
     cheerful = {},
-    shy      = {}, -- handled by SIGNATURE (fully retracted in shell)
-    aloof    = { {13,13,2},{13,14,1} }, -- eye dismissive
-    gluttonous = { {14,14,5},{14,13,5} }, -- longer mouth
-    lazy     = { {13,13,3},{13,14,3} }, -- half-closed eye
-    grumpy   = { {13,13,2},{13,14,2}, {12,13,2} }, -- furrowed
+    shy      = {}, -- handled by SIGNATURE (fully retracted)
+    aloof    = { {13,14,3} }, -- pupil becomes highlight (looking away)
+    gluttonous = { {14,14,5} }, -- extend mouth one pixel left
+    lazy     = { {13,14,3},{13,15,3} }, -- both eye cells dimmed (sleepy)
+    grumpy   = { {13,14,2},{13,15,2} }, -- eye squints to outline
 }
 local function snailCellColor(cell, tint, dimK)
     if cell == 1 then return applyTint(C(220,175,160), tint, dimK)    -- body pink-tan
@@ -530,43 +555,46 @@ local SPECIES_NAMES = {
 -- is stronger than just an eye tweak. When a key is present here
 -- it REPLACES the base+expr grid entirely.
 --================================================================
--- Shy turtle: head + legs fully retracted, just shell + a tiny peeking
--- eye from the shell's front opening
+-- Shy turtle: head / tail / all legs fully retracted; only the small
+-- shell sits on the ground with plastron (yellow belly) peeking
+-- underneath. Matches new compact side-view shell.
 local TURTLE_SHY_SIG = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0},   -- shell peak
-    {0,0,0,0,2,2,9,4,4,9,2,2,0,0,0,0},
-    {0,0,0,2,9,4,9,9,9,9,4,9,2,0,0,0},
-    {0,0,2,9,4,9,9,4,4,9,9,4,9,2,0,0},
-    {0,2,9,9,9,9,4,6,7,4,9,9,9,9,2,0},   -- peek eye poking out
-    {0,2,9,4,9,4,9,9,9,9,4,9,4,9,2,0},
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},   -- rim
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0},   -- under rim (hidden head)
-    {0,0,0,0,2,2,2,2,2,2,2,2,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0},   -- shell peak
+    {0,0,0,0,0,2,2,9,9,9,9,2,2,0,0,0},
+    {0,0,0,0,2,9,4,9,9,4,9,9,2,0,0,0},
+    {0,0,0,2,9,4,9,6,7,9,9,4,9,2,0,0},   -- tiny peeking eye in shell
+    {0,0,0,2,9,9,9,4,4,9,9,9,9,2,0,0},
+    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,0,0},   -- shell rim
+    {0,0,0,2,4,4,4,4,4,4,4,4,4,2,0,0},   -- plastron exposed
+    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,0,0},   -- plastron outline
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 }
--- Shy snail: body/head/antennae all retracted, only shell is on display
+-- Shy snail: body/head fully retracted, only the spiral shell sits
+-- on the ground with plastron peeking. Matches new larger 2-ring
+-- spiral aesthetic.
 local SNAIL_SHY_SIG = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0},    -- shell top
-    {0,0,0,0,2,9,4,4,4,9,2,0,0,0,0,0},
-    {0,0,0,2,9,4,9,4,9,4,9,2,0,0,0,0},
-    {0,0,2,9,9,2,2,2,4,9,9,4,2,0,0,0},
-    {0,2,9,4,2,4,3,2,9,4,9,9,9,2,0,0},    -- spiral center
-    {0,2,9,9,2,9,2,4,2,9,4,9,9,2,0,0},
-    {0,2,9,4,9,2,9,2,9,9,9,4,9,2,0,0},
-    {0,2,9,9,4,9,9,9,4,9,9,9,9,2,0,0},
-    {0,0,2,9,9,9,9,9,9,9,9,9,2,0,0,0},
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,0,0,0},    -- shell rim sits on ground
-    {0,0,0,2,4,4,4,4,4,4,4,4,2,0,0,0},    -- underside peek
-    {0,0,0,0,2,2,2,2,2,2,2,2,0,0,0,0},
+    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},   -- shell top
+    {0,0,0,2,9,4,4,4,4,4,9,2,0,0,0,0},
+    {0,0,2,9,4,2,2,2,2,2,4,9,2,0,0,0},
+    {0,2,9,4,2,9,4,4,9,2,4,9,2,0,0,0},
+    {0,2,9,4,2,9,3,9,9,2,4,9,2,0,0,0},   -- center highlight
+    {0,2,9,4,2,9,9,9,9,2,4,9,2,0,0,0},
+    {0,2,9,4,2,2,2,2,2,2,4,9,2,0,0,0},
+    {0,2,9,4,4,4,4,4,4,4,4,9,2,0,0,0},
+    {0,0,2,9,9,9,9,9,9,9,9,2,0,0,0,0},
+    {0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0},   -- shell rim
+    {0,0,0,2,4,4,4,4,4,4,4,2,0,0,0,0},   -- plastron peek
+    {0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0},   -- outline bottom
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 }
 -- Lazy slime: pancake-flattened blob (wider, shorter, sleepy eyes)
@@ -657,6 +685,18 @@ end
 ------------------------------------------------------------------
 -- Generic pet renderer (works for any species)
 ------------------------------------------------------------------
+-- Per-species vertical nudge: some species' 16×16 art has its feet at
+-- art y=14 with y=15 empty (legacy of the pre-26×26 design). Shifting
+-- those species down by 1 pixel makes every pet's feet land on the
+-- same canvas row (y=20), so the floor line is flat across all 10.
+local FOOT_ADJUST = {
+    bird    = 1,
+    -- turtle and snail both now bottom-aligned at art y=15 (reference-
+    -- driven redesigns); no per-species offset needed.
+    octopus = 1,
+    slime   = 1,
+}
+
 local function renderPet(img, speciesKey, personality, stage, mode, frame)
     local sp = SPECIES_DATA[speciesKey]
     local grid = buildGrid(speciesKey, personality)
@@ -664,6 +704,16 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
     local dimK = (stage == "elder") and 0.85 or 1.0
     local childShrink = (stage == "child") and 1 or 0
     local cellColor = sp.cellColor
+    local footAdj = FOOT_ADJUST[speciesKey] or 0
+
+    -- DP: art-space drawPixel. All coordinates in this function are
+    -- given relative to the 16×16 art grid; DP shifts them into the
+    -- 26×26 canvas by OFFSET plus any species-specific footAdj so
+    -- every pet's feet land on the same canvas floor row.
+    local function DP(x, y, color)
+        local cx, cy = x + OFFSET, y + OFFSET + footAdj
+        if inBounds(cx, cy) then img:drawPixel(cx, cy, color) end
+    end
 
     -- ------------------------------------------------------------------
     -- Sleeping: short-circuit the upright grid and paint a species-
@@ -678,12 +728,10 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
     if mode == "sleeping" then
         local breath = (frame == 1) and -1 or 0
 
-        -- Helper: paint a species-cell-color pixel at (x, y+breath).
+        -- Helper: paint a species-cell-color pixel at art-space (x, y+breath).
+        -- Internally shifts to canvas space by OFFSET.
         local function p(x, y, cellType)
-            local yy = y + breath
-            if inBounds(x, yy) then
-                img:drawPixel(x, yy, cellColor(cellType, tint, dimK))
-            end
+            DP(x, y + breath, cellColor(cellType, tint, dimK))
         end
 
         if speciesKey == "chick" then
@@ -843,14 +891,15 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
             for x = 4, 11 do p(x, 15, 2) end
 
         elseif speciesKey == "turtle" then
-            -- Just the dome shell, a tiny plastron peeking underneath
-            for x = 5, 10 do p(x, 9, 2) end
-            p(4, 10, 2); p(5, 10, 9); p(6, 10, 4); p(7, 10, 9); p(8, 10, 9); p(9, 10, 4); p(10, 10, 9); p(11, 10, 2)
-            p(3, 11, 2); p(4, 11, 9); p(5, 11, 4); p(6, 11, 9); p(7, 11, 4); p(8, 11, 4); p(9, 11, 9); p(10, 11, 4); p(11, 11, 9); p(12, 11, 2)
-            p(3, 12, 2); for x = 4, 12 do p(x, 12, 9) end; p(13, 12, 2)
-            p(3, 13, 2); p(4, 13, 9); p(5, 13, 4); p(6, 13, 9); p(7, 13, 9); p(8, 13, 9); p(9, 13, 4); p(10, 13, 9); p(11, 13, 9); p(12, 13, 9); p(13, 13, 2)
-            for x = 3, 13 do p(x, 14, 2) end
-            for x = 4, 12 do p(x, 15, 4) end
+            -- Side-view shell resting on the ground with plastron peeking;
+            -- head/tail/legs all tucked in for sleep.
+            for x = 6, 9 do p(x, 9, 2) end                                -- shell peak
+            p(5, 10, 2); p(6, 10, 9); p(7, 10, 4); p(8, 10, 4); p(9, 10, 9); p(10, 10, 2)
+            p(4, 11, 2); p(5, 11, 9); p(6, 11, 4); p(7, 11, 9); p(8, 11, 9); p(9, 11, 4); p(10, 11, 9); p(11, 11, 2)
+            p(3, 12, 2); p(4, 12, 9); p(5, 12, 9); p(6, 12, 4); p(7, 12, 9); p(8, 12, 9); p(9, 12, 4); p(10, 12, 9); p(11, 12, 9); p(12, 12, 2)
+            p(2, 13, 2); for x = 3, 12 do p(x, 13, 9) end; p(13, 13, 2)   -- widest shell
+            p(2, 14, 2); for x = 3, 12 do p(x, 14, 2) end; p(13, 14, 2)   -- shell rim
+            for x = 3, 12 do p(x, 15, 4) end                              -- plastron on ground
 
         elseif speciesKey == "snail" then
             -- Antennae retracted, shell rests sideways with foot curled
@@ -888,14 +937,14 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
         -- Shoulder z cycle (inlined since we return early)
         local sf = frame % 3
         if sf == 0 then
-            img:drawPixel(14, 1, WHITE)
+            DP(14, 1, WHITE)
         elseif sf == 1 then
-            img:drawPixel(13, 0, WHITE); img:drawPixel(14, 0, WHITE)
-            img:drawPixel(13, 1, WHITE)
-            img:drawPixel(13, 2, WHITE); img:drawPixel(14, 2, WHITE)
+            DP(13, 0, WHITE); DP(14, 0, WHITE)
+            DP(13, 1, WHITE)
+            DP(13, 2, WHITE); DP(14, 2, WHITE)
         else
-            img:drawPixel(12, 0, WHITE); img:drawPixel(13, 0, WHITE); img:drawPixel(14, 0, WHITE)
-            img:drawPixel(13, 1, WHITE); img:drawPixel(12, 2, WHITE); img:drawPixel(13, 2, WHITE); img:drawPixel(14, 2, WHITE)
+            DP(12, 0, WHITE); DP(13, 0, WHITE); DP(14, 0, WHITE)
+            DP(13, 1, WHITE); DP(12, 2, WHITE); DP(13, 2, WHITE); DP(14, 2, WHITE)
         end
         return
     end
@@ -965,28 +1014,26 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
     elseif mode == "idle" or mode == "hungry" or mode == "happy" then blink = (frame == 3)
     end
 
-    -- Draw grid
+    -- Draw grid (coordinates in art-space; DP adds OFFSET)
     for row = 1, SIDE do
         for col = 1, SIDE do
             local cell = grid[row][col]
             if cell ~= 0 then
                 local x = col - 1 + leanX
                 local y = row - 1 + breathOffset + childShrink
-                if inBounds(x, y) then
-                    local drawColor = nil
-                    if blink and (cell == 6 or cell == 7) then
-                        drawColor = cellColor(2, tint, dimK) -- outline = closed eye
-                    elseif mode == "sick" and cell == 4 then
-                        drawColor = SICK_BELLY
-                    elseif mode == "sick" and (cell == 6 or cell == 7) then
-                        drawColor = cellColor(2, tint, dimK)
-                    elseif mode == "poop_act" and frame == 1 and cell == 8 then
-                        drawColor = C(255, 120, 120)
-                    else
-                        drawColor = cellColor(cell, tint, dimK)
-                    end
-                    if drawColor then img:drawPixel(x, y, drawColor) end
+                local drawColor = nil
+                if blink and (cell == 6 or cell == 7) then
+                    drawColor = cellColor(2, tint, dimK) -- outline = closed eye
+                elseif mode == "sick" and cell == 4 then
+                    drawColor = SICK_BELLY
+                elseif mode == "sick" and (cell == 6 or cell == 7) then
+                    drawColor = cellColor(2, tint, dimK)
+                elseif mode == "poop_act" and frame == 1 and cell == 8 then
+                    drawColor = C(255, 120, 120)
+                else
+                    drawColor = cellColor(cell, tint, dimK)
                 end
+                if drawColor then DP(x, y, drawColor) end
             end
         end
     end
@@ -997,64 +1044,60 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
             if grid[r][c] == 8 then
                 local x = c - 1 + leanX
                 local y = r - 1 + breathOffset + childShrink
-                if inBounds(x, y) then
-                    img:drawPixel(x, y, cellColor(1, tint, dimK))
-                end
+                DP(x, y, cellColor(1, tint, dimK))
             end
         end end
     end
 
     -----------------------------------------------------------
-    -- Mode overlays (universal — pixel positions at sprite top)
+    -- Mode overlays (pixel coords are art-space; DP handles OFFSET)
     -----------------------------------------------------------
     local cs = childShrink
     if mode == "hungry" then
         if math.floor(frame / 2) % 2 == 0 then
-            img:drawPixel(8, 0, WARN); img:drawPixel(8, 1, WARN); img:drawPixel(8, 3, WARN)
+            DP(8, 0, WARN); DP(8, 1, WARN); DP(8, 3, WARN)
         end
     elseif mode == "happy" then
-        if frame%2==0 then img:drawPixel(1,2,SPARKLE); img:drawPixel(14,3,SPARKLE)
-        else img:drawPixel(2,3,SPARKLE); img:drawPixel(13,2,SPARKLE) end
+        if frame%2==0 then DP(1,2,SPARKLE); DP(14,3,SPARKLE)
+        else DP(2,3,SPARKLE); DP(13,2,SPARKLE) end
     elseif mode == "sick" then
         if frame%2==0 then
-            img:drawPixel(6,0,SICK_WAVE); img:drawPixel(7,1,SICK_WAVE)
-            img:drawPixel(8,0,SICK_WAVE); img:drawPixel(9,1,SICK_WAVE)
+            DP(6,0,SICK_WAVE); DP(7,1,SICK_WAVE)
+            DP(8,0,SICK_WAVE); DP(9,1,SICK_WAVE)
         else
-            img:drawPixel(6,1,SICK_WAVE); img:drawPixel(7,0,SICK_WAVE)
-            img:drawPixel(8,1,SICK_WAVE); img:drawPixel(9,0,SICK_WAVE)
+            DP(6,1,SICK_WAVE); DP(7,0,SICK_WAVE)
+            DP(8,1,SICK_WAVE); DP(9,0,SICK_WAVE)
         end
     elseif mode == "curious" then
         if frame%2==0 then
-            img:drawPixel(13,0,QUESTION); img:drawPixel(14,1,QUESTION)
-            img:drawPixel(13,2,QUESTION); img:drawPixel(13,4,QUESTION)
+            DP(13,0,QUESTION); DP(14,1,QUESTION)
+            DP(13,2,QUESTION); DP(13,4,QUESTION)
         else
-            img:drawPixel(1,0,QUESTION); img:drawPixel(2,1,QUESTION)
-            img:drawPixel(1,2,QUESTION); img:drawPixel(1,4,QUESTION)
+            DP(1,0,QUESTION); DP(2,1,QUESTION)
+            DP(1,2,QUESTION); DP(1,4,QUESTION)
         end
     elseif mode == "angry" then
         if frame%2==0 then
-            img:drawPixel(2,0,SMOKE); img:drawPixel(3,1,SMOKE)
-            img:drawPixel(13,0,SMOKE); img:drawPixel(14,1,SMOKE)
+            DP(2,0,SMOKE); DP(3,1,SMOKE)
+            DP(13,0,SMOKE); DP(14,1,SMOKE)
         else
-            img:drawPixel(3,0,SMOKE); img:drawPixel(2,1,SMOKE)
-            img:drawPixel(14,0,SMOKE); img:drawPixel(13,1,SMOKE)
+            DP(3,0,SMOKE); DP(2,1,SMOKE)
+            DP(14,0,SMOKE); DP(13,1,SMOKE)
         end
-        if frame%2==0 then img:drawPixel(5,15,cellColor(2,tint,dimK))
-        else img:drawPixel(10,15,cellColor(2,tint,dimK)) end
+        if frame%2==0 then DP(5,15,cellColor(2,tint,dimK))
+        else DP(10,15,cellColor(2,tint,dimK)) end
 
-        -- Signature Grumpy-Octopus: ink spurt. Instead of the generic
-        -- steam puffs above the head, a dark cloud erupts downward
-        -- from below the tentacles.
+        -- Signature Grumpy-Octopus: ink spurt below the tentacles.
         if speciesKey == "octopus" then
             local ink = C(20, 15, 25)
             if frame%2==0 then
-                img:drawPixel(3,15,ink); img:drawPixel(4,14,ink)
-                img:drawPixel(11,15,ink); img:drawPixel(12,14,ink)
-                img:drawPixel(7,15,ink); img:drawPixel(8,15,ink)
+                DP(3,15,ink); DP(4,14,ink)
+                DP(11,15,ink); DP(12,14,ink)
+                DP(7,15,ink); DP(8,15,ink)
             else
-                img:drawPixel(2,14,ink); img:drawPixel(4,15,ink)
-                img:drawPixel(11,14,ink); img:drawPixel(13,15,ink)
-                img:drawPixel(6,15,ink); img:drawPixel(9,15,ink)
+                DP(2,14,ink); DP(4,15,ink)
+                DP(11,14,ink); DP(13,15,ink)
+                DP(6,15,ink); DP(9,15,ink)
             end
         end
 
@@ -1063,102 +1106,89 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
         -- Tongue: CHEEK-colored pixels hanging below beak + sparkle
         local ty = 7 + cs + breathOffset
         if frame%2==0 then
-            if inBounds(7,ty) then img:drawPixel(7,ty,CHEEK) end
-            if inBounds(8,ty+1) then img:drawPixel(8,ty+1,CHEEK) end
+            DP(7,ty,CHEEK); DP(8,ty+1,CHEEK)
         else
-            if inBounds(8,ty) then img:drawPixel(8,ty,CHEEK) end
-            if inBounds(9,ty+1) then img:drawPixel(9,ty+1,CHEEK) end
+            DP(8,ty,CHEEK); DP(9,ty+1,CHEEK)
         end
-        if frame == 1 then img:drawPixel(13,3,SPARKLE) end
+        if frame == 1 then DP(13,3,SPARKLE) end
     elseif mode == "lookaway" then
         -- Full head turn: shove both eyes to one side + sweat drop
         if frame%2==0 then
-            img:drawPixel(9,2+cs,EYEWHITE); img:drawPixel(10,2+cs,EYEDARK)
-            img:drawPixel(11,2+cs,EYEWHITE); img:drawPixel(12,2+cs,EYEDARK)
-            img:drawPixel(1,3,C(140,200,240))  -- sweat drop left
-            img:drawPixel(1,4,C(140,200,240))
+            DP(9,2+cs,EYEWHITE); DP(10,2+cs,EYEDARK)
+            DP(11,2+cs,EYEWHITE); DP(12,2+cs,EYEDARK)
+            DP(1,3,C(140,200,240))
+            DP(1,4,C(140,200,240))
         else
-            img:drawPixel(3,2+cs,EYEDARK); img:drawPixel(4,2+cs,EYEWHITE)
-            img:drawPixel(5,2+cs,EYEDARK); img:drawPixel(6,2+cs,EYEWHITE)
-            img:drawPixel(14,3,C(140,200,240))
-            img:drawPixel(14,4,C(140,200,240))
+            DP(3,2+cs,EYEDARK); DP(4,2+cs,EYEWHITE)
+            DP(5,2+cs,EYEDARK); DP(6,2+cs,EYEWHITE)
+            DP(14,3,C(140,200,240))
+            DP(14,4,C(140,200,240))
         end
     elseif mode == "huff" then
-        -- Big smoke cloud + furrowed brow
         if frame%2==0 then
-            img:drawPixel(2,0,SMOKE); img:drawPixel(3,1,SMOKE); img:drawPixel(4,0,SMOKE)
-            img:drawPixel(12,0,SMOKE); img:drawPixel(13,1,SMOKE)
+            DP(2,0,SMOKE); DP(3,1,SMOKE); DP(4,0,SMOKE)
+            DP(12,0,SMOKE); DP(13,1,SMOKE)
         else
-            img:drawPixel(3,0,SMOKE); img:drawPixel(4,1,SMOKE)
-            img:drawPixel(11,1,SMOKE); img:drawPixel(12,0,SMOKE); img:drawPixel(13,1,SMOKE)
+            DP(3,0,SMOKE); DP(4,1,SMOKE)
+            DP(11,1,SMOKE); DP(12,0,SMOKE); DP(13,1,SMOKE)
         end
-        -- Furrowed brow: dark pixels above both eyes
-        img:drawPixel(6,1+cs,EYEDARK); img:drawPixel(7,1+cs,EYEDARK)
-        img:drawPixel(9,1+cs,EYEDARK); img:drawPixel(10,1+cs,EYEDARK)
+        DP(6,1+cs,EYEDARK); DP(7,1+cs,EYEDARK)
+        DP(9,1+cs,EYEDARK); DP(10,1+cs,EYEDARK)
     elseif mode == "yawn" then
-        -- Wide-open beak + Z (sleep kana)
         local beakColor = cellColor(5, tint, dimK) or C(255,148,26)
-        img:drawPixel(7,6+cs,beakColor); img:drawPixel(8,6+cs,beakColor)
-        img:drawPixel(9,6+cs,beakColor)
-        img:drawPixel(7,7+cs,beakColor); img:drawPixel(8,7+cs,beakColor)
-        img:drawPixel(9,7+cs,beakColor)
-        -- "Z" above head (frame-animated)
+        DP(7,6+cs,beakColor); DP(8,6+cs,beakColor)
+        DP(9,6+cs,beakColor)
+        DP(7,7+cs,beakColor); DP(8,7+cs,beakColor)
+        DP(9,7+cs,beakColor)
         if frame%2==0 then
-            img:drawPixel(12,0,WHITE); img:drawPixel(13,0,WHITE); img:drawPixel(14,0,WHITE)
-            img:drawPixel(13,1,WHITE)
-            img:drawPixel(12,2,WHITE); img:drawPixel(13,2,WHITE); img:drawPixel(14,2,WHITE)
+            DP(12,0,WHITE); DP(13,0,WHITE); DP(14,0,WHITE)
+            DP(13,1,WHITE)
+            DP(12,2,WHITE); DP(13,2,WHITE); DP(14,2,WHITE)
         end
     elseif mode == "held" then
-        -- Dangling legs, motion-swoosh trails, and surprise mark
         local bodyOut = cellColor(2, tint, dimK) or OUTLINE
         local swingDir = 0
         if frame == 0 then swingDir = -1 else swingDir = 1 end
-        -- Two dangling leg pixels below the body (rows 14-15)
         local legBaseY = 15
         for _, col in ipairs({6, 9}) do
             local lx = col + swingDir + leanX
-            if inBounds(lx, legBaseY) then img:drawPixel(lx, legBaseY, bodyOut) end
-            if inBounds(lx, legBaseY-1) then img:drawPixel(lx, legBaseY-1, bodyOut) end
+            DP(lx, legBaseY, bodyOut)
+            DP(lx, legBaseY-1, bodyOut)
         end
-        -- Motion-swoosh lines trailing behind the swing
         local trail = C(230, 230, 230)
         if frame == 0 then
-            img:drawPixel(14,5,trail); img:drawPixel(15,6,trail); img:drawPixel(14,7,trail)
+            DP(14,5,trail); DP(15,6,trail); DP(14,7,trail)
         else
-            img:drawPixel(1,5,trail); img:drawPixel(0,6,trail); img:drawPixel(1,7,trail)
+            DP(1,5,trail); DP(0,6,trail); DP(1,7,trail)
         end
-        -- Surprised "!" floating above head
-        img:drawPixel(8,0,WARN); img:drawPixel(8,1,WARN); img:drawPixel(8,3,WARN)
+        DP(8,0,WARN); DP(8,1,WARN); DP(8,3,WARN)
 
     -- Ambient overlays
     elseif mode == "walk" then
         local outC = cellColor(2, tint, dimK)
-        if frame==0 or frame==3 then img:drawPixel(3,14+cs,outC)
-        else img:drawPixel(12,14+cs,outC) end
+        if frame==0 or frame==3 then DP(3,14+cs,outC)
+        else DP(12,14+cs,outC) end
     elseif mode == "peck" then
         if frame == 1 then
             local beakColor = cellColor(5, tint, dimK) or C(255,148,26)
             local py = 14+cs
-            if inBounds(7,py) then img:drawPixel(7,py,beakColor) end
-            if inBounds(8,py) then img:drawPixel(8,py,beakColor) end
+            DP(7,py,beakColor); DP(8,py,beakColor)
         end
     elseif mode == "flap" then
         local wc = cellColor(9, tint, dimK) or cellColor(1, tint, dimK)
         local wy = 7+cs
         if frame==1 then
-            img:drawPixel(14,wy,wc); img:drawPixel(15,wy,wc)
+            DP(14,wy,wc); DP(15,wy,wc)
         elseif frame==2 then
-            if inBounds(14,wy-1) then img:drawPixel(14,wy-1,wc) end
-            if inBounds(15,wy-1) then img:drawPixel(15,wy-1,wc) end
-            img:drawPixel(14,wy,wc)
+            DP(14,wy-1,wc); DP(15,wy-1,wc); DP(14,wy,wc)
         end
     elseif mode == "dance" then
-        if frame==3 then img:drawPixel(2,1,SPARKLE); img:drawPixel(13,1,SPARKLE) end
+        if frame==3 then DP(2,1,SPARKLE); DP(13,1,SPARKLE) end
     elseif mode == "stretch" then
         if frame==2 then
             local wc = cellColor(9, tint, dimK) or cellColor(1, tint, dimK)
             local wy = 7+cs
-            img:drawPixel(0,wy,wc); img:drawPixel(15,wy,wc)
+            DP(0,wy,wc); DP(15,wy,wc)
         end
 
     -- Action feedback overlays
@@ -1166,46 +1196,39 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
         local beakColor = cellColor(5, tint, dimK) or C(255,148,26)
         if frame==1 then
             local by = 6+cs+1
-            if inBounds(7,by) then img:drawPixel(7,by,beakColor) end
-            if inBounds(8,by) then img:drawPixel(8,by,beakColor) end
+            DP(7,by,beakColor); DP(8,by,beakColor)
         end
         if frame==2 then
             local cy = 7+cs
-            if inBounds(3,cy) then img:drawPixel(3,cy,CHEEK) end
-            if inBounds(12,cy) then img:drawPixel(12,cy,CHEEK) end
+            DP(3,cy,CHEEK); DP(12,cy,CHEEK)
         end
     elseif mode == "play_act" then
         local wc = cellColor(9, tint, dimK) or cellColor(1, tint, dimK)
         if frame==0 then
             local wy = 7+cs+1
-            if inBounds(0,wy) then img:drawPixel(0,wy,wc) end
-            if inBounds(15,wy) then img:drawPixel(15,wy,wc) end
+            DP(0,wy,wc); DP(15,wy,wc)
         elseif frame==1 then
             local wy = 5+cs
-            if inBounds(0,wy) then img:drawPixel(0,wy,wc) end
-            if inBounds(0,wy+1) then img:drawPixel(0,wy+1,wc) end
-            if inBounds(1,wy-1) then img:drawPixel(1,wy-1,wc) end
-            if inBounds(1,wy) then img:drawPixel(1,wy,wc) end
-            if inBounds(14,wy-1) then img:drawPixel(14,wy-1,wc) end
-            if inBounds(14,wy) then img:drawPixel(14,wy,wc) end
-            if inBounds(15,wy) then img:drawPixel(15,wy,wc) end
-            if inBounds(15,wy+1) then img:drawPixel(15,wy+1,wc) end
+            DP(0,wy,wc); DP(0,wy+1,wc)
+            DP(1,wy-1,wc); DP(1,wy,wc)
+            DP(14,wy-1,wc); DP(14,wy,wc)
+            DP(15,wy,wc); DP(15,wy+1,wc)
         elseif frame==2 then
-            img:drawPixel(2,14+cs,SPARKLE); img:drawPixel(13,14+cs,SPARKLE)
+            DP(2,14+cs,SPARKLE); DP(13,14+cs,SPARKLE)
         end
     elseif mode == "medic" then
         local beakColor = cellColor(5, tint, dimK) or C(255,148,26)
         if frame==0 then
-            img:drawPixel(7,6+cs,beakColor); img:drawPixel(8,6+cs,beakColor)
-            img:drawPixel(9,6+cs,beakColor)
+            DP(7,6+cs,beakColor); DP(8,6+cs,beakColor)
+            DP(9,6+cs,beakColor)
         end
-        if frame==2 then img:drawPixel(14,2,SPARKLE) end
+        if frame==2 then DP(14,2,SPARKLE) end
     elseif mode == "poop_act" then
-        if frame==1 then img:drawPixel(7,0,WARN); img:drawPixel(8,0,WARN) end
+        if frame==1 then DP(7,0,WARN); DP(8,0,WARN) end
     elseif mode == "clean_act" then
         if frame==2 then
-            img:drawPixel(1,2,SPARKLE); img:drawPixel(14,3,SPARKLE)
-            img:drawPixel(3,4,SPARKLE); img:drawPixel(12,2,SPARKLE)
+            DP(1,2,SPARKLE); DP(14,3,SPARKLE)
+            DP(3,4,SPARKLE); DP(12,2,SPARKLE)
         end
     end
 end
@@ -1255,15 +1278,16 @@ local function renderEgg(img, frame)
     for row = 1, SIDE do for col = 1, SIDE do
         local cell = EGG[row][col]
         if cell ~= 0 then
-            local x = col - 1 + wiggle; local y = row - 1
+            local x = col - 1 + wiggle + OFFSET
+            local y = row - 1 + OFFSET
             if inBounds(x, y) then
                 img:drawPixel(x, y, cell == 1 and SHELL or SHELL_OUT)
             end
         end
     end end
-    img:drawPixel(6+wiggle, 5, SPECKLE)
-    img:drawPixel(9+wiggle, 8, SPECKLE)
-    img:drawPixel(5+wiggle, 10, SPECKLE)
+    img:drawPixel(6+wiggle+OFFSET, 5+OFFSET, SPECKLE)
+    img:drawPixel(9+wiggle+OFFSET, 8+OFFSET, SPECKLE)
+    img:drawPixel(5+wiggle+OFFSET, 10+OFFSET, SPECKLE)
 end
 
 local function renderDeparted(img, frame)
@@ -1272,8 +1296,10 @@ local function renderDeparted(img, frame)
     local outC  = Color{ r=255, g=255, b=255, a = bright and 89 or 55 }
     for row = 1, SIDE do for col = 1, SIDE do
         local cell = GHOST[row][col]
-        if cell == 1 then img:drawPixel(col-1, row-1, bodyC)
-        elseif cell == 2 then img:drawPixel(col-1, row-1, outC) end
+        local x = col - 1 + OFFSET
+        local y = row - 1 + OFFSET
+        if cell == 1 then img:drawPixel(x, y, bodyC)
+        elseif cell == 2 then img:drawPixel(x, y, outC) end
     end end
 end
 
@@ -1361,7 +1387,7 @@ end
 ------------------------------------------------------------------
 -- Build sprite document
 ------------------------------------------------------------------
-local spr = Sprite(SIDE, SIDE, ColorMode.RGB)
+local spr = Sprite(CANVAS, CANVAS, ColorMode.RGB)
 spr.filename = OUTPUT
 
 local layer = spr.layers[1]
@@ -1375,7 +1401,7 @@ local tagBoundaries = {}
 for _, seq in ipairs(SEQUENCES) do
     local from = frameIdx
     for local_f = 0, seq.count - 1 do
-        local img = Image(SIDE, SIDE, ColorMode.RGB)
+        local img = Image(CANVAS, CANVAS, ColorMode.RGB)
         seq.drawer(img, local_f)
         local existing = layer:cel(frameIdx)
         if existing then spr:deleteCel(existing) end

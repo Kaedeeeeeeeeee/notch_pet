@@ -25,8 +25,8 @@ COLS = ["cheerful_adult_idle", "cheerful_adult_sleeping"] + [
 ]
 COL_LABELS = ["idle", "sleep"] + PERSONALITIES
 
-SCALE = 6
-CELL = 16
+SCALE = 4
+CELL = 26
 PAD = 6
 LABEL_W = 70
 

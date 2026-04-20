@@ -31,13 +31,15 @@ struct RoomView: View {
         petState.awaitingRebornConfirm && !farewellFinished
     }
 
-    /// Block 6 polish: pet sprite shrunk from 120 → 60 so furniture
-    /// has room to breathe behind it. Anything scaled relative to the
-    /// pet uses this single constant.
-    static let petSize: CGFloat = 60
+    /// Pet sprite frame size. Sprites are now rendered onto a 26×26
+    /// canvas (16×16 art + 5-pixel padding each side so animation
+    /// offsets like bounce / held don't clip). Size 98 = 60 × 26/16,
+    /// which keeps the visible animal at the same on-screen size as
+    /// the old 16×16 sprite at 60pt.
+    static let petSize: CGFloat = 98
     /// Hit / cursor area around the pet — slightly larger than the
     /// sprite so tiny taps near the silhouette still register.
-    static let petHitSize: CGFloat = 84
+    static let petHitSize: CGFloat = 137
 
     var body: some View {
         ZStack {
@@ -441,11 +443,12 @@ enum RoomGeometry {
     /// Y (inside the panel) of the wall-back furniture slot.
     /// Preserves the old centred `-95` from centre at a ~400pt panel.
     static let wallShelfY: CGFloat = 110
-    /// Empirical transparent padding below the sprite feet inside the
-    /// 60pt pet frame. Positive pushes the pet down to compensate for
-    /// bottom padding in the artwork; 0 means sprite-bottom touches
-    /// floor exactly. Tune if feet visibly sink or float.
-    static let petFootInset: CGFloat = 0
+    /// Transparent padding below the sprite feet inside the 98pt pet
+    /// frame. The 26×26 render canvas has 5 pixels of padding below
+    /// the 16-row art; at 98pt / 26px ≈ 3.77pt per pixel, that's ~19pt
+    /// of empty space below the visible feet. Positive petFootInset
+    /// pushes the pet down so the feet still land on the floor line.
+    static let petFootInset: CGFloat = 19
     /// Half-height of the poop sprite at size 24, used to bottom-anchor
     /// the poop pile on the floor line.
     static let poopHalfHeight: CGFloat = 12

@@ -30,8 +30,8 @@ COLS = [
     ("held",       "cheerful_adult_held",      0),
 ]
 
-SCALE = 6
-CELL = 16
+SCALE = 4
+CELL = 26
 PAD = 6
 LABEL_W = 70
 
@@ -81,6 +81,11 @@ for row, sp in enumerate(SPECIES):
         bg = Image.new("RGBA", (cell_px, cell_px), (220, 210, 190, 255))
         canvas.paste(bg, (x, y0))
         canvas.paste(sub, (x, y0), sub)
+        # Floor line: at canvas-y=20 (where feet land for species with
+        # feet at art y=15). Drawn across the cell so it's easy to eye-
+        # ball whether each species' feet actually touch the floor.
+        floor_y = y0 + int(cell_px * (20 + 1) / CELL)
+        draw.line([(x, floor_y), (x + cell_px, floor_y)], fill=(180, 40, 40, 180), width=1)
 
 canvas.save(OUT)
 print(f"wrote {OUT}  ({grid_w}x{grid_h})")
