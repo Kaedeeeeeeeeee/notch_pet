@@ -284,46 +284,37 @@ local function frogCellColor(cell, tint, dimK)
 end
 
 --================================================================
--- SNAKE — reference-driven (Snake-game head + coiled body). Big
--- expressive head with 2×2 eyes featuring clear eye-whites + pupils,
--- Y-shaped forked red tongue, coiled body with alternating scale
--- bands (inspired by opengameart Snake_sprite_sheet.png). Big head
--- is what gives instant snake-recognition at tiny size.
+-- SNAKE — cute side-view floor crawler. A low S-curve body keeps it
+-- readable beside the turtle/snail, with one clear eye and a tiny forked
+-- tongue on the right-facing head.
 --================================================================
 -- Cell: 1=body 2=outline 3=highlight 4=belly-peek
 --       5=tongue-red 6=eye-white 7=eye-pupil 8=cheek 9=dark-scales
 local SNAKE_BASE = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1 (y=0)
-    {0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0},  --  2 (y=1) head crown (6 wide)
-    {0,0,0,0,2,3,3,3,3,3,3,2,0,0,0,0},  --  3 (y=2) head widens
-    {0,0,0,2,3,6,6,3,3,6,6,3,2,0,0,0},  --  4 (y=3) 2×2 eye whites
-    {0,0,0,2,3,6,7,3,3,7,6,3,2,0,0,0},  --  5 (y=4) pupils (inner = looking fwd)
-    {0,0,0,2,3,3,3,3,3,3,3,3,2,0,0,0},  --  6 (y=5) chin
-    {0,0,0,0,2,3,1,5,5,1,3,2,0,0,0,0},  --  7 (y=6) open mouth + tongue base
-    {0,0,0,0,0,2,5,2,2,5,2,0,0,0,0,0},  --  8 (y=7) Y-forked tongue tips
-    -- === Upper coil (smaller, sitting on top) ===
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0},  --  9 (y=8) upper coil top (10 wide)
-    {0,0,2,3,1,9,9,9,9,9,9,1,3,2,0,0},  -- 10 (y=9) upper scales (12 wide)
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},  -- 11 (y=10) tier seam (bottom of upper)
-    -- === Lower coil (wider, supports the upper) ===
-    {0,2,3,1,1,1,1,1,1,1,1,1,1,3,2,0},  -- 12 (y=11) lower coil top body (14)
-    {2,3,1,9,9,9,9,9,9,9,9,9,9,1,3,2},  -- 13 (y=12) lower scales (16 wide)
-    {2,3,1,1,1,1,1,1,1,1,1,1,1,1,3,2},  -- 14 (y=13) lower body
-    {0,2,2,4,4,4,4,4,4,4,4,4,4,2,2,0},  -- 15 (y=14) yellow belly
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0},  -- 16 (y=15) ground
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  2 (y=1)
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  3 (y=2)
+    {0,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0},  --  4 (y=3) head crown
+    {0,0,0,0,0,0,0,0,0,2,3,6,7,3,2,0},  --  5 (y=4) single bright eye
+    {0,0,0,0,0,0,0,0,2,3,1,1,3,5,2,5},  --  6 (y=5) head + tiny tongue
+    {0,0,0,0,0,0,0,0,2,3,1,1,8,2,0,0},  --  7 (y=6) cheek + neck
+    {0,0,0,0,2,2,2,2,3,1,1,1,2,0,0,0},  --  8 (y=7) upper S curve
+    {0,0,2,2,3,1,9,1,1,1,9,1,3,2,0,0},  --  9 (y=8)
+    {0,2,3,1,1,1,2,2,2,1,1,9,1,3,2,0},  -- 10 (y=9) S bend
+    {2,3,1,9,1,2,0,0,2,3,1,1,1,1,2,0},  -- 11 (y=10)
+    {2,3,1,1,1,2,0,0,2,3,1,9,1,3,2,0},  -- 12 (y=11)
+    {0,2,3,1,9,1,2,2,3,1,1,1,3,2,0,0},  -- 13 (y=12) lower curve
+    {0,0,2,3,1,1,1,1,1,1,1,3,2,0,0,0},  -- 14 (y=13)
+    {0,0,0,2,3,4,4,4,4,4,3,2,0,0,0,0},  -- 15 (y=14) belly highlight
+    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},  -- 16 (y=15) floor contact
 }
 local SNAKE_EXPR = {
     cheerful = {},
-    -- shy: close both eyes to slits (all 8 eye cells → outline)
-    shy      = { {4,6,2},{4,7,2},{4,10,2},{4,11,2},{5,6,2},{5,7,2},{5,10,2},{5,11,2} },
-    -- aloof: swap pupil/white so pupils face outward (looking away)
-    aloof    = { {5,6,7},{5,7,6},{5,10,6},{5,11,7} },
-    -- gluttonous: widen tongue to 4px wide
-    gluttonous = { {7,7,5},{7,10,5} },
-    -- lazy: top row of eyes becomes highlight (droopy upper lids)
-    lazy     = { {4,6,3},{4,7,3},{4,10,3},{4,11,3} },
-    -- grumpy: dark brow line just above each eye
-    grumpy   = { {3,6,2},{3,7,2},{3,10,2},{3,11,2} },
+    shy      = { {5,12,3},{5,13,2}, {7,13,3} },
+    aloof    = { {5,12,7},{5,13,6} },
+    gluttonous = { {6,15,5} },
+    lazy     = { {5,12,3},{5,13,3},{6,13,2} },
+    grumpy   = { {4,12,2},{5,13,2} },
 }
 local function snakeCellColor(cell, tint, dimK)
     if cell == 1 then return applyTint(C(105,185,75),  tint, dimK) -- body green
@@ -339,94 +330,89 @@ local function snakeCellColor(cell, tint, dimK)
 end
 
 --================================================================
--- TURTLE — reference-driven (opengameart 16x16 animated turtle):
--- very horizontal body with SMALL shell (3-4 rows), clear yellow
--- belly + 2 visible legs poking down, head bumping out front-right.
--- Shell is now ~25% of height rather than 44% — this is what stops
--- it reading as a mushroom.
+-- TURTLE — rounded side-view mascot silhouette:
+-- oversized domed shell, soft green head poking out right, tiny tail,
+-- and two stubby feet on the floor. The shell shares a single top-left
+-- light direction so the sprite reads as a turtle at 1x instead of a
+-- hat sitting on a square body.
 --================================================================
 -- Cell: 1=skin(green) 2=outline 3=skin-highlight 4=shell-highlight
 --       5=mouth/nose 6=eye-white 7=eye-pupil 8=cheek 9=shell-body
 local TURTLE_BASE = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1 (y=0)
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  2 (y=1)
-    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},  --  3 (y=2) shell peak (7 wide)
-    {0,0,0,2,9,4,4,4,4,4,9,2,0,0,0,0},  --  4 (y=3) shell row 2
-    {0,0,2,9,4,9,9,4,9,4,9,9,2,0,0,0},  --  5 (y=4) shell row 3
-    {0,0,2,9,4,4,9,9,4,9,9,4,2,0,0,0},  --  6 (y=5) shell row 4 — EXTRA for thickness
-    {0,0,2,2,2,2,2,2,2,2,2,2,2,0,0,0},  --  7 (y=6) shell rim
-    -- === NECK outline at x=10 clearly separates body (x=3-9) from head (x=11-15) ===
-    -- === Plastron (9/4 shell pattern) on belly row ===
-    -- === Tail (left): extends all the way to x=0 ===
-    {0,0,0,1,1,1,1,1,1,1,2,2,2,2,2,0},  --  8 (y=7) body + NECK + head top outline
-    {0,0,0,1,1,1,1,1,1,1,2,1,1,3,3,2},  --  9 (y=8) body + NECK + head body + hl
-    {0,2,2,1,1,1,1,1,1,1,2,1,1,6,7,2},  -- 10 (y=9) tail top outline + body + NECK + eye
-    {2,1,1,1,1,1,1,1,1,1,2,1,1,6,7,2},  -- 11 (y=10) tail body + body + NECK + eye row 2
-    {0,2,2,4,9,4,9,4,9,4,2,1,1,3,5,2},  -- 12 (y=11) tail close + PLASTRON + NECK + mouth
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,0},  -- 13 (y=12) body underline + head closure
-    {0,0,0,2,1,2,0,0,0,0,2,1,2,0,0,0},  -- 14 (y=13) legs (back + front)
-    {0,0,0,2,1,2,0,0,0,0,2,1,2,0,0,0},  -- 15 (y=14) legs
-    {0,0,0,2,2,2,0,0,0,0,2,2,2,0,0,0},  -- 16 (y=15) feet on ground
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  3 (y=2)
+    {0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0},  --  4 (y=3) shell crown
+    {0,0,0,2,2,9,4,4,9,2,2,0,0,0,0,0},  --  5 (y=4)
+    {0,0,2,9,4,4,4,9,9,4,9,2,0,0,0,0},  --  6 (y=5)
+    {0,2,9,4,4,9,4,9,4,9,9,9,2,2,0,0},  --  7 (y=6) shell + neck outline
+    {0,2,9,4,9,4,9,9,9,4,9,9,2,1,2,0},  --  8 (y=7) head starts
+    {2,9,4,9,9,4,9,4,9,9,9,2,1,6,7,2},  --  9 (y=8) eye
+    {2,9,9,9,4,9,9,9,4,9,9,2,1,3,3,2},  -- 10 (y=9) round cheek mass
+    {0,2,2,9,9,9,9,9,9,9,2,1,1,8,5,2},  -- 11 (y=10) cheek + mouth
+    {0,0,2,2,4,4,4,4,4,2,1,1,1,2,2,0},  -- 12 (y=11) plastron + neck
+    {0,2,1,2,2,2,2,2,2,2,2,1,2,0,0,0},  -- 13 (y=12) tail + belly line
+    {2,1,1,2,1,2,0,0,0,2,1,2,0,0,0,0},  -- 14 (y=13) tail + feet
+    {0,2,2,0,1,2,0,0,0,2,1,2,0,0,0,0},  -- 15 (y=14) legs
+    {0,0,0,0,2,2,0,0,0,0,2,2,0,0,0,0},  -- 16 (y=15) feet on ground
 }
 local TURTLE_EXPR = {
     cheerful = {},
     -- shy handled by SIGNATURE (all retracted)
     shy      = {},
-    -- aloof: top row of eye becomes highlight (half-lidded, looking away)
-    aloof    = { {10,14,3},{10,15,3} },
-    -- gluttonous: extend mouth one pixel left
-    gluttonous = { {12,14,5} },
-    -- lazy: both rows of eye dimmed (sleepy)
-    lazy     = { {10,14,3},{10,15,3},{11,14,3},{11,15,3} },
-    -- grumpy: dark brow above eye (row 9 = y=8, just above eye at y=9)
-    grumpy   = { {9,14,2},{9,15,2} },
+    -- aloof/lazy keep the single side-view eye small and sleepy.
+    aloof    = { {9,14,3},{9,15,2} },
+    -- gluttonous: grin widens into the cheek pixel.
+    gluttonous = { {11,14,5} },
+    lazy     = { {9,14,3},{9,15,3},{10,14,2} },
+    -- grumpy: brow above the eye.
+    grumpy   = { {8,14,2},{9,15,2} },
 }
 local function turtleCellColor(cell, tint, dimK)
-    if cell == 1 then return applyTint(C(140,180,110), tint, dimK)    -- skin green
-    elseif cell == 2 then return C(40, 45, 20)                        -- outline
-    elseif cell == 3 then return applyTint(C(185,215,135), tint, dimK)-- skin highlight
-    elseif cell == 4 then return applyTint(C(180,135,70), tint, dimK) -- shell highlight
-    elseif cell == 5 then return C(80, 50, 30)                        -- mouth
+    if cell == 1 then return applyTint(C(126,178,86), tint, dimK)     -- skin green
+    elseif cell == 2 then return C(38, 50, 24)                        -- outline
+    elseif cell == 3 then return applyTint(C(174,218,118), tint, dimK)-- skin highlight
+    elseif cell == 4 then return applyTint(C(196,150,78), tint, dimK) -- shell highlight
+    elseif cell == 5 then return C(72, 47, 28)                        -- mouth
     elseif cell == 6 then return EYEWHITE
     elseif cell == 7 then return EYEDARK
     elseif cell == 8 then return C(255,165,165)
-    elseif cell == 9 then return applyTint(C(110,70,35), tint, dimK)  -- shell body
+    elseif cell == 9 then return applyTint(C(95, 74, 42), tint, dimK) -- shell body
     end; return nil
 end
 
 --================================================================
--- SNAIL — reference-driven (opengameart snail pack): shell DOMINATES
--- (~60% of sprite), clear 2-ring spiral pattern with center dot,
--- small body sticking out with just a tiny eye (no tall antennae).
--- This shell-first proportion is what reads as "snail" instantly.
+-- SNAIL — big-shell side-view snail with two short eye stalks. The shell
+-- dominates the silhouette, while the body is a short soft foot so it reads
+-- as a pet rather than a long slug with a box on top.
 --================================================================
 -- Cell: 1=body-pink 2=outline 3=body-highlight 4=shell-highlight
 --       5=mouth-dot 6=eye-white 7=eye-pupil 8=cheek 9=shell-body
 local SNAIL_BASE = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  1 (y=0)
-    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},  --  2 (y=1) shell top
-    {0,0,0,2,9,4,4,4,4,4,9,2,0,0,0,0},  --  3 (y=2)
-    {0,0,2,9,4,2,2,2,2,2,4,9,2,0,0,0},  --  4 (y=3) outer ring + inner starts
-    {0,2,9,4,2,9,4,4,9,2,4,9,2,0,0,0},  --  5 (y=4)
-    {0,2,9,4,2,9,3,9,9,2,4,9,2,0,0,0},  --  6 (y=5) center highlight (3)
-    {0,2,9,4,2,9,9,9,9,2,4,9,2,0,0,0},  --  7 (y=6)
-    {0,2,9,4,2,2,2,2,2,2,4,9,2,0,0,0},  --  8 (y=7) inner ring close
-    {0,2,9,4,4,4,4,4,4,4,4,9,2,0,0,0},  --  9 (y=8)
-    {0,0,2,9,9,9,9,9,9,9,9,2,0,0,0,0},  -- 10 (y=9) shell bottom curve
-    {0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0},  -- 11 (y=10) shell rim
-    {0,2,3,1,1,1,1,1,1,1,1,1,1,1,3,2},  -- 12 (y=11) body top + head right
-    {2,1,1,8,1,1,1,1,1,1,1,1,1,6,7,2},  -- 13 (y=12) body + cheek + eye
-    {2,1,1,1,1,1,1,1,1,1,1,1,1,1,5,2},  -- 14 (y=13) body + mouth
-    {2,2,1,1,1,1,1,1,1,1,1,1,1,1,2,2},  -- 15 (y=14) body outline
-    {0,2,4,4,4,4,4,4,4,4,4,4,4,4,2,0},  -- 16 (y=15) foot underside on ground
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},  --  2 (y=1)
+    {0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0},  --  3 (y=2) shell crown
+    {0,0,0,2,9,4,4,4,9,2,0,0,0,0,0,0},  --  4 (y=3)
+    {0,0,2,9,4,2,2,4,4,9,2,0,0,0,0,0},  --  5 (y=4)
+    {0,2,9,4,2,9,4,9,2,4,9,2,0,0,0,0},  --  6 (y=5)
+    {0,2,9,4,2,9,3,9,2,4,9,2,0,0,0,0},  --  7 (y=6) spiral center
+    {0,2,9,4,2,9,9,9,2,4,9,2,0,0,0,0},  --  8 (y=7)
+    {0,2,9,4,2,2,2,2,2,4,9,2,6,7,6,7},  --  9 (y=8) eye tips above head
+    {0,2,9,4,4,4,4,4,4,4,9,2,0,2,0,2},  -- 10 (y=9) eye stalks
+    {0,0,2,9,9,9,9,9,9,9,2,3,2,3,2,0},  -- 11 (y=10) shell bottom + stalk roots
+    {0,0,0,2,2,2,2,2,2,2,2,1,1,3,2,0},  -- 12 (y=11) shell rim + head
+    {0,0,0,2,3,1,1,1,1,1,1,1,8,5,2,0},  -- 13 (y=12) thin body + face
+    {0,0,2,1,1,1,1,1,1,1,1,3,2,0,0,0},  -- 14 (y=13) narrow foot
+    {0,0,0,2,4,4,4,4,4,4,4,2,0,0,0,0},  -- 15 (y=14) foot underside
+    {0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0},  -- 16 (y=15) floor contact
 }
 local SNAIL_EXPR = {
     cheerful = {},
     shy      = {}, -- handled by SIGNATURE (fully retracted)
-    aloof    = { {13,14,3} }, -- pupil becomes highlight (looking away)
-    gluttonous = { {14,14,5} }, -- extend mouth one pixel left
-    lazy     = { {13,14,3},{13,15,3} }, -- both eye cells dimmed (sleepy)
-    grumpy   = { {13,14,2},{13,15,2} }, -- eye squints to outline
+    aloof    = { {9,13,7},{9,14,6},{9,15,7},{9,16,6} },
+    gluttonous = { {13,13,5} },
+    lazy     = { {9,13,3},{9,14,2},{9,15,3},{9,16,2} },
+    grumpy   = { {8,13,2},{8,15,2},{9,14,2},{9,16,2} },
 }
 local function snailCellColor(cell, tint, dimK)
     if cell == 1 then return applyTint(C(220,175,160), tint, dimK)    -- body pink-tan
@@ -555,47 +541,45 @@ local SPECIES_NAMES = {
 -- is stronger than just an eye tweak. When a key is present here
 -- it REPLACES the base+expr grid entirely.
 --================================================================
--- Shy turtle: head / tail / all legs fully retracted; only the small
--- shell sits on the ground with plastron (yellow belly) peeking
--- underneath. Matches new compact side-view shell.
+-- Shy turtle: head / tail / legs fully retracted, leaving a rounded
+-- closed shell with a small plastron band touching the floor.
 local TURTLE_SHY_SIG = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0},   -- shell peak
-    {0,0,0,0,0,2,2,9,9,9,9,2,2,0,0,0},
-    {0,0,0,0,2,9,4,9,9,4,9,9,2,0,0,0},
-    {0,0,0,2,9,4,9,6,7,9,9,4,9,2,0,0},   -- tiny peeking eye in shell
-    {0,0,0,2,9,9,9,4,4,9,9,9,9,2,0,0},
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,0,0},   -- shell rim
-    {0,0,0,2,4,4,4,4,4,4,4,4,4,2,0,0},   -- plastron exposed
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,0,0},   -- plastron outline
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0},   -- shell crown
+    {0,0,0,2,2,9,4,4,9,2,2,0,0,0,0,0},
+    {0,0,2,9,4,4,4,9,9,4,9,2,0,0,0,0},
+    {0,2,9,4,4,9,4,9,4,9,9,9,2,0,0,0},
+    {2,9,4,9,9,4,9,4,9,9,9,9,2,0,0,0},
+    {2,9,9,9,4,9,9,9,4,9,9,9,2,0,0,0},
+    {0,2,2,9,9,9,9,9,9,9,9,2,0,0,0,0},
+    {0,0,2,2,4,4,4,4,4,4,2,2,0,0,0,0},   -- plastron band
+    {0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0},
+    {0,0,0,0,2,4,4,4,4,4,2,0,0,0,0,0},
+    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 }
--- Shy snail: body/head fully retracted, only the spiral shell sits
--- on the ground with plastron peeking. Matches new larger 2-ring
--- spiral aesthetic.
+-- Shy snail: body/head/eye stalks fully retracted, leaving only a
+-- grounded spiral shell with a tiny pale foot band.
 local SNAIL_SHY_SIG = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,2,2,2,2,2,2,2,0,0,0,0,0},   -- shell top
-    {0,0,0,2,9,4,4,4,4,4,9,2,0,0,0,0},
-    {0,0,2,9,4,2,2,2,2,2,4,9,2,0,0,0},
-    {0,2,9,4,2,9,4,4,9,2,4,9,2,0,0,0},
-    {0,2,9,4,2,9,3,9,9,2,4,9,2,0,0,0},   -- center highlight
-    {0,2,9,4,2,9,9,9,9,2,4,9,2,0,0,0},
-    {0,2,9,4,2,2,2,2,2,2,4,9,2,0,0,0},
-    {0,2,9,4,4,4,4,4,4,4,4,9,2,0,0,0},
-    {0,0,2,9,9,9,9,9,9,9,9,2,0,0,0,0},
-    {0,0,0,2,2,2,2,2,2,2,2,0,0,0,0,0},   -- shell rim
-    {0,0,0,2,4,4,4,4,4,4,4,2,0,0,0,0},   -- plastron peek
-    {0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0},   -- outline bottom
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,2,2,2,2,2,0,0,0,0,0,0,0},   -- shell top
+    {0,0,0,2,9,4,4,4,9,2,0,0,0,0,0,0},
+    {0,0,2,9,4,2,2,4,4,9,2,0,0,0,0,0},
+    {0,2,9,4,2,9,4,9,2,4,9,2,0,0,0,0},
+    {0,2,9,4,2,9,3,9,2,4,9,2,0,0,0,0},   -- center highlight
+    {0,2,9,4,2,9,9,9,2,4,9,2,0,0,0,0},
+    {0,2,9,4,2,2,2,2,2,4,9,2,0,0,0,0},
+    {0,2,9,4,4,4,4,4,4,4,9,2,0,0,0,0},
+    {0,0,2,9,9,9,9,9,9,9,2,0,0,0,0,0},
+    {0,0,0,2,2,2,2,2,2,2,0,0,0,0,0,0},   -- shell rim
+    {0,0,0,2,4,4,4,4,4,4,2,0,0,0,0,0},   -- tucked foot
+    {0,0,0,0,2,4,4,4,4,4,2,0,0,0,0,0},
+    {0,0,0,0,0,2,2,2,2,2,0,0,0,0,0,0},
 }
 -- Lazy slime: pancake-flattened blob (wider, shorter, sleepy eyes)
 local SLIME_LAZY_SIG = {
@@ -616,8 +600,8 @@ local SLIME_LAZY_SIG = {
     {0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
 }
--- Lazy snake: coiled flat on the ground, head lazily resting on the top
--- coil. Horizontal ellipse with the head visible on the right.
+-- Lazy snake: same side-view S, but flattened with a closed eye and the
+-- head resting closer to the floor.
 local SNAKE_LAZY_SIG = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -626,15 +610,15 @@ local SNAKE_LAZY_SIG = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0},   -- top of coil
-    {0,0,2,3,1,1,1,9,1,9,1,1,1,3,2,0},
-    {0,2,3,1,9,1,9,1,9,1,9,1,9,1,3,2},   -- full-width scales band
-    {0,2,3,1,1,9,1,9,1,9,1,2,2,2,2,0},   -- right end has head tucked
-    {0,2,2,3,1,1,9,1,9,1,1,2,3,3,2,0},
-    {0,0,2,2,3,3,4,4,4,4,3,2,3,7,2,5},   -- closed eye slit + tongue
-    {0,0,0,2,2,2,2,2,2,2,2,2,2,2,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0},   -- low head crown
+    {0,0,0,0,0,0,0,0,2,2,3,2,2,3,2,0},   -- closed eye
+    {0,0,0,0,2,2,2,2,3,1,1,1,3,5,2,5},
+    {0,0,2,2,3,1,9,1,1,1,9,1,3,2,0,0},
+    {0,2,3,1,1,1,2,2,2,1,1,9,1,3,2,0},
+    {2,3,1,9,1,2,0,0,2,3,1,1,1,1,2,0},
+    {0,2,3,1,1,1,2,2,3,1,9,1,3,2,0,0},
+    {0,0,2,3,1,1,1,1,1,1,1,3,2,0,0,0},
+    {0,0,0,2,2,4,4,4,4,4,2,2,0,0,0,0},
 }
 local SIGNATURES = {
     turtle_shy = TURTLE_SHY_SIG,
@@ -881,37 +865,35 @@ local function renderPet(img, speciesKey, personality, stage, mode, frame)
             p(12, 15, 1); p(13, 15, 1); p(14, 15, 2)
 
         elseif speciesKey == "snake" then
-            -- Coiled flat on the ground, head nestled in the center
-            for x = 4, 11 do p(x, 9, 2) end
-            p(3, 10, 2); p(4, 10, 3); for x = 5, 10 do p(x, 10, 1) end; p(11, 10, 3); p(12, 10, 2)
-            p(2, 11, 2); p(3, 11, 3); p(4, 11, 9); p(5, 11, 1); p(6, 11, 9); p(7, 11, 1); p(8, 11, 9); p(9, 11, 1); p(10, 11, 9); p(11, 11, 1); p(12, 11, 3); p(13, 11, 2)
-            p(2, 12, 2); p(3, 12, 1); p(4, 12, 1); p(5, 12, 9); p(6, 12, 1); p(7, 12, 2); p(8, 12, 1); p(9, 12, 2); p(10, 12, 1); p(11, 12, 9); p(12, 12, 1); p(13, 12, 2)
-            p(2, 13, 2); p(3, 13, 3); p(4, 13, 9); p(5, 13, 1); p(6, 13, 9); p(7, 13, 1); p(8, 13, 9); p(9, 13, 1); p(10, 13, 9); p(11, 13, 1); p(12, 13, 3); p(13, 13, 2)
-            p(3, 14, 2); p(4, 14, 3); for x = 5, 10 do p(x, 14, 4) end; p(11, 14, 3); p(12, 14, 2)
-            for x = 4, 11 do p(x, 15, 2) end
+            -- Side-view sleeping S: head tucked right, body flat on floor.
+            for x = 10, 13 do p(x, 9, 2) end
+            p(8, 10, 2); p(9, 10, 2); p(10, 10, 3); p(11, 10, 2); p(12, 10, 2); p(13, 10, 3); p(14, 10, 2)
+            p(4, 11, 2); p(5, 11, 2); p(6, 11, 2); p(7, 11, 2); p(8, 11, 3); p(9, 11, 1); p(10, 11, 1); p(11, 11, 1); p(12, 11, 3); p(13, 11, 5); p(14, 11, 2); p(15, 11, 5)
+            p(2, 12, 2); p(3, 12, 2); p(4, 12, 3); p(5, 12, 1); p(6, 12, 9); p(7, 12, 1); p(8, 12, 1); p(9, 12, 1); p(10, 12, 9); p(11, 12, 1); p(12, 12, 3); p(13, 12, 2)
+            p(1, 13, 2); p(2, 13, 3); p(3, 13, 1); p(4, 13, 1); p(5, 13, 1); p(6, 13, 2); p(7, 13, 2); p(8, 13, 2); p(9, 13, 1); p(10, 13, 1); p(11, 13, 9); p(12, 13, 1); p(13, 13, 3); p(14, 13, 2)
+            p(2, 14, 2); p(3, 14, 3); p(4, 14, 1); p(5, 14, 9); p(6, 14, 1); p(7, 14, 2); p(8, 14, 2); p(9, 14, 3); p(10, 14, 1); p(11, 14, 1); p(12, 14, 3); p(13, 14, 2)
+            p(3, 15, 2); p(4, 15, 2); for x = 5, 10 do p(x, 15, 4) end; p(11, 15, 2); p(12, 15, 2)
 
         elseif speciesKey == "turtle" then
-            -- Side-view shell resting on the ground with plastron peeking;
-            -- head/tail/legs all tucked in for sleep.
-            for x = 6, 9 do p(x, 9, 2) end                                -- shell peak
-            p(5, 10, 2); p(6, 10, 9); p(7, 10, 4); p(8, 10, 4); p(9, 10, 9); p(10, 10, 2)
-            p(4, 11, 2); p(5, 11, 9); p(6, 11, 4); p(7, 11, 9); p(8, 11, 9); p(9, 11, 4); p(10, 11, 9); p(11, 11, 2)
-            p(3, 12, 2); p(4, 12, 9); p(5, 12, 9); p(6, 12, 4); p(7, 12, 9); p(8, 12, 9); p(9, 12, 4); p(10, 12, 9); p(11, 12, 9); p(12, 12, 2)
-            p(2, 13, 2); for x = 3, 12 do p(x, 13, 9) end; p(13, 13, 2)   -- widest shell
-            p(2, 14, 2); for x = 3, 12 do p(x, 14, 2) end; p(13, 14, 2)   -- shell rim
-            for x = 3, 12 do p(x, 15, 4) end                              -- plastron on ground
+            -- Tucked turtle: lower, rounder version of the new shell.
+            for x = 6, 9 do p(x, 9, 2) end
+            p(4, 10, 2); p(5, 10, 2); p(6, 10, 9); p(7, 10, 4); p(8, 10, 4); p(9, 10, 9); p(10, 10, 2); p(11, 10, 2)
+            p(3, 11, 2); p(4, 11, 9); p(5, 11, 4); p(6, 11, 4); p(7, 11, 9); p(8, 11, 4); p(9, 11, 9); p(10, 11, 9); p(11, 11, 9); p(12, 11, 2)
+            p(2, 12, 2); p(3, 12, 9); p(4, 12, 4); p(5, 12, 9); p(6, 12, 9); p(7, 12, 4); p(8, 12, 9); p(9, 12, 4); p(10, 12, 9); p(11, 12, 9); p(12, 12, 9); p(13, 12, 2)
+            p(2, 13, 2); p(3, 13, 9); p(4, 13, 9); p(5, 13, 9); p(6, 13, 4); p(7, 13, 9); p(8, 13, 9); p(9, 13, 9); p(10, 13, 4); p(11, 13, 9); p(12, 13, 9); p(13, 13, 2)
+            p(3, 14, 2); for x = 4, 11 do p(x, 14, 4) end; p(12, 14, 2)
+            for x = 4, 11 do p(x, 15, 2) end
 
         elseif speciesKey == "snail" then
-            -- Antennae retracted, shell rests sideways with foot curled
-            -- underneath; shell spiral still readable.
+            -- Eye stalks tucked away; the big spiral shell rests on a short foot.
             for x = 5, 9 do p(x, 8, 2) end
-            p(4, 9, 2); p(5, 9, 9); p(6, 9, 4); p(7, 9, 4); p(8, 9, 4); p(9, 9, 9); p(10, 9, 2)
-            p(3, 10, 2); p(4, 10, 9); p(5, 10, 4); p(6, 10, 9); p(7, 10, 4); p(8, 10, 9); p(9, 10, 4); p(10, 10, 9); p(11, 10, 2)
-            p(2, 11, 2); p(3, 11, 9); p(4, 11, 4); p(5, 11, 2); p(6, 11, 2); p(7, 11, 2); p(8, 11, 4); p(9, 11, 9); p(10, 11, 4); p(11, 11, 9); p(12, 11, 2)
-            p(2, 12, 2); p(3, 12, 9); p(4, 12, 9); p(5, 12, 2); p(6, 12, 4); p(7, 12, 2); p(8, 12, 9); p(9, 12, 4); p(10, 12, 9); p(11, 12, 9); p(12, 12, 2)
-            p(2, 13, 2); p(3, 13, 9); p(4, 13, 4); p(5, 13, 2); p(6, 13, 2); p(7, 13, 9); p(8, 13, 4); p(9, 13, 9); p(10, 13, 9); p(11, 13, 4); p(12, 13, 9); p(13, 13, 2)
-            for x = 2, 13 do p(x, 14, 2) end
-            for x = 3, 12 do p(x, 15, 4) end
+            p(4, 9, 2); p(5, 9, 9); p(6, 9, 4); p(7, 9, 4); p(8, 9, 9); p(9, 9, 2)
+            p(3, 10, 2); p(4, 10, 9); p(5, 10, 4); p(6, 10, 2); p(7, 10, 2); p(8, 10, 4); p(9, 10, 9); p(10, 10, 2)
+            p(2, 11, 2); p(3, 11, 9); p(4, 11, 4); p(5, 11, 2); p(6, 11, 9); p(7, 11, 4); p(8, 11, 2); p(9, 11, 4); p(10, 11, 9); p(11, 11, 2)
+            p(2, 12, 2); p(3, 12, 9); p(4, 12, 4); p(5, 12, 2); p(6, 12, 9); p(7, 12, 9); p(8, 12, 2); p(9, 12, 4); p(10, 12, 9); p(11, 12, 2)
+            p(2, 13, 2); p(3, 13, 9); p(4, 13, 4); p(5, 13, 2); p(6, 13, 2); p(7, 13, 2); p(8, 13, 4); p(9, 13, 9); p(10, 13, 9); p(11, 13, 2)
+            p(3, 14, 2); for x = 4, 10 do p(x, 14, 4) end; p(11, 14, 2)
+            for x = 4, 10 do p(x, 15, 2) end
 
         elseif speciesKey == "octopus" then
             -- Head slumped, all tentacles furled inward around it
