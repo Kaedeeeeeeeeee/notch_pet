@@ -31,6 +31,7 @@
 		6D1FEB33E2BC451D86E8ECC9 /* RoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEABA289258E6E18698446C /* RoomView.swift */; };
 		7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F5AA7B41C812CA4AFAF841B /* PetView.swift */; };
 		77C8E7CA8FA67FBD64868D34 /* Audio in Resources */ = {isa = PBXBuildFile; fileRef = EF6B33D52A313769168D692A /* Audio */; };
+		7D0D9CBCBC7F7D4BEC7EB91B /* PoopFliesOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C36D845F80B55CEDDAC9D7A /* PoopFliesOverlay.swift */; };
 		7D6AAC97E6300FD51CD8B73A /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0311D1441EA3F9444AEE42 /* SupabaseConfig.swift */; };
 		86974DF88DCC8B00243538F0 /* SleepZzzOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87C701A3198CC97C408F84DA /* SleepZzzOverlay.swift */; };
 		9224C7E2688C8FC994C62D66 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF6ADC7C463D86ECDDE200AC /* CloudSync.swift */; };
@@ -92,6 +93,7 @@
 		773E8578934248614FA7103B /* Cursors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Cursors; path = NotchPet/Assets/Cursors; sourceTree = SOURCE_ROOT; };
 		7AEABA289258E6E18698446C /* RoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomView.swift; sourceTree = "<group>"; };
 		7B0AF2862573BC56FC026DB9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7C36D845F80B55CEDDAC9D7A /* PoopFliesOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoopFliesOverlay.swift; sourceTree = "<group>"; };
 		7D6C6288C171FCC2E3A033C1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7EC0D3B0FE44BAD7B1F72795 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		87C701A3198CC97C408F84DA /* SleepZzzOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepZzzOverlay.swift; sourceTree = "<group>"; };
@@ -254,6 +256,7 @@
 				71421B7080EEAD2BDEF15626 /* OnboardingOverlay.swift */,
 				586963E99D0149981DA5ACEB /* PetCursors.swift */,
 				601F2B591952366AFF4B4321 /* PetHeadStatusOverlay.swift */,
+				7C36D845F80B55CEDDAC9D7A /* PoopFliesOverlay.swift */,
 				46CF8B0FB3906BC908CB2ECB /* PoopView.swift */,
 				7AEABA289258E6E18698446C /* RoomView.swift */,
 				87C701A3198CC97C408F84DA /* SleepZzzOverlay.swift */,
@@ -323,6 +326,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					8825F018DF436ACAC1EFCB10 = {
+						DevelopmentTeam = Y4FV6WUU4V;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -408,6 +412,7 @@
 				C33F03FA77A95CBC8692CD24 /* PetStateStore.swift in Sources */,
 				7239DCE65FEAE5714C43C595 /* PetView.swift in Sources */,
 				09DF0DCBADC938A360517A3E /* PlayerInventory.swift in Sources */,
+				7D0D9CBCBC7F7D4BEC7EB91B /* PoopFliesOverlay.swift in Sources */,
 				50585BA54C67F3911B6F16F2 /* PoopView.swift in Sources */,
 				569605F5ED414361B75D1663 /* QRCodeRenderer.swift in Sources */,
 				E8D925CB628BF8C62CDEBABF /* QRScanWindowController.swift in Sources */,
@@ -497,9 +502,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = NotchPet/Resources/NotchPet.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = Y4FV6WUU4V;
 				ENABLE_APP_SANDBOX = NO;
 				INFOPLIST_FILE = NotchPet/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -578,9 +584,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = NotchPet/Resources/NotchPet.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = Y4FV6WUU4V;
 				ENABLE_APP_SANDBOX = NO;
 				INFOPLIST_FILE = NotchPet/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

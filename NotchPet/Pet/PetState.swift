@@ -28,6 +28,23 @@ enum ActionAnimation: Equatable {
     case medicine
     case pooping
     case cleaning
+    case discipline
+    case toiletSuccess
+    case feedRejected
+    case hatch
+    case stageUp
+}
+
+/// Highest-priority reason the pet is currently asking for attention.
+/// Transient UI uses this to pick head icons, action buttons, and
+/// attention shakes without duplicating gameplay rules in multiple views.
+enum PetAttentionReason: Equatable {
+    case needsPoop
+    case sick
+    case poop
+    case hungry
+    case lowMood
+    case discipline
 }
 
 /// Behavioral state of the pet. Drives movement + ambient animations.
@@ -71,6 +88,12 @@ final class PetState: ObservableObject {
     /// until the user taps "Welcome New Life" in the reborn overlay.
     @Published var awaitingRebornConfirm: Bool = false
 
+    /// Transient flag — flips true once the farewell animation finishes
+    /// playing for the current departed→reborn cycle. Survives notch
+    /// collapse/expand (RoomView gets destroyed each time, so this can't
+    /// live as a local `@State`). Reset in `rebornAsNewGeneration()`.
+    @Published var farewellAnimationShown: Bool = false
+
     // Movement + behavior (transient, not persisted)
     @Published var petX: CGFloat = 0
     @Published var petY: CGFloat = 0
@@ -93,6 +116,10 @@ final class PetState: ObservableObject {
 
     /// Transient feed-rejection marker (aloof personality).
     @Published var feedRejectedUntil: Date? = nil
+
+    /// Transient discipline window. Used for classic Tamagotchi-style
+    /// "naughty" beats such as refusing food or sulking at zero mood.
+    @Published var disciplineDueUntil: Date? = nil
 
     /// Transient action-animation state (Block 6). Cleared by a
     /// scheduled main-queue job 0.9s after set.
@@ -117,6 +144,9 @@ final class PetState: ObservableObject {
     @Published var lastPoopAt: Date?
     /// When the next poop should spawn. Set by `feed()`.
     @Published var poopDueAt: Date?
+    /// Transient pre-poop warning. If the user responds before this
+    /// deadline, the pet uses the toilet and no floor poop is created.
+    @Published var needsPoopUntil: Date? = nil
 
     // Lifecycle
     @Published var ageActiveSeconds: Double
@@ -129,6 +159,32 @@ final class PetState: ObservableObject {
     @Published var hungerZeroSeconds: Double
     @Published var happyZeroSeconds: Double
     @Published var sickSeconds: Double
+
+    /// Next time the critical-warning siren should replay. Nil while
+    /// the pet is safely away from the death threshold. Reset to nil
+    /// when vitals recover or when the pet actually dies. Not persisted
+    /// — the next tick after load recomputes it from the neglect
+    /// trackers above.
+    private var criticalWarningNextAt: Date? = nil
+
+    /// True when the pet is deep into any death countdown (≥60% through
+    /// the hunger / happy / sick threshold). Drives the critical-warning
+    /// audio loop and the red-pulse head-status icon. Computed from the
+    /// three `@Published` neglect trackers, so SwiftUI views re-evaluate
+    /// it automatically on any vital change.
+    ///
+    /// Threshold picks 60% of the death time so the warning window is
+    /// a meaningful fraction of the countdown: ~4s/8s/8s in DEBUG,
+    /// ~5hr/10hr/10hr in release.
+    var isCriticallyLow: Bool {
+        guard stage == .child || stage == .adult || stage == .elder else {
+            return false
+        }
+        let ratio: Double = 0.6
+        return hungerZeroSeconds >= Self.hungerDeathSeconds * ratio
+            || happyZeroSeconds  >= Self.happyDeathSeconds  * ratio
+            || sickSeconds       >= Self.sickDeathSeconds   * ratio
+    }
 
     // Personality
     @Published var personality: PersonalityTrait?
@@ -278,6 +334,43 @@ final class PetState: ObservableObject {
         return until > Date()
     }
 
+    var needsPoop: Bool {
+        guard let until = needsPoopUntil else { return false }
+        return until > Date()
+    }
+
+    var isFeedRejected: Bool {
+        guard let until = feedRejectedUntil else { return false }
+        return until > Date()
+    }
+
+    var isDisciplineDue: Bool {
+        guard canInteract, !isBeingHeld else { return false }
+        if isFeedRejected { return true }
+        if let until = disciplineDueUntil, until > Date() { return true }
+        return happy == 0 && hunger > 0 && !sick && poops == 0 && !needsPoop
+    }
+
+    var attentionReason: PetAttentionReason? {
+        guard canInteract else { return nil }
+        if needsPoop { return .needsPoop }
+        if sick { return .sick }
+        if poops > 0 { return .poop }
+        if hunger == 0 { return .hungry }
+        if happy == 0 { return .lowMood }
+        if isDisciplineDue { return .discipline }
+        return nil
+    }
+
+    var shouldShakeForAttention: Bool {
+        switch attentionReason {
+        case .needsPoop, .sick, .hungry, .lowMood, .discipline:
+            return true
+        case .poop, nil:
+            return false
+        }
+    }
+
     // MARK: - Actions
 
     /// Apply a user-typed name. Trims whitespace, truncates to
@@ -420,8 +513,10 @@ final class PetState: ObservableObject {
         // Aloof pets refuse feeding ~20% of the time.
         let acceptProbability = personality?.feedAcceptProbability ?? 1.0
         if acceptProbability < 1.0, Double.random(in: 0..<1) >= acceptProbability {
-            feedRejectedUntil = Date().addingTimeInterval(1.0)
+            feedRejectedUntil = Date().addingTimeInterval(4.0)
+            disciplineDueUntil = Date().addingTimeInterval(8.0)
             SoundPlayer.shared.play(.feedReject)
+            triggerActionAnimation(.feedRejected)
             return
         }
         hunger = min(Self.maxHearts, hunger + 1)
@@ -443,6 +538,21 @@ final class PetState: ObservableObject {
         SoundPlayer.shared.play(.play)
         triggerActionAnimation(.playing)
         onCoinsEarned?(1)
+    }
+
+    func rest() {
+        guard canInteract else { return }
+        happyUntil = Date().addingTimeInterval(Self.happyDuration)
+        SoundPlayer.shared.play(.rest)
+        activeBehavior = .performing(.sit)
+
+        let deadline = DispatchTime.now() + .milliseconds(1200)
+        DispatchQueue.main.asyncAfter(deadline: deadline) { [weak self] in
+            guard let self else { return }
+            if case .performing(.sit) = self.activeBehavior {
+                self.activeBehavior = .idle
+            }
+        }
     }
 
     /// Block 6: new action. Administer medicine to clear sickness.
@@ -468,6 +578,34 @@ final class PetState: ObservableObject {
         onCoinsEarned?(2)
     }
 
+    /// Respond during the pre-poop warning window. This mirrors classic
+    /// Tamagotchi timing: catch the signal in time and the mess never
+    /// lands on the floor.
+    func useToilet() {
+        guard canInteract, needsPoop else { return }
+        needsPoopUntil = nil
+        poopDueAt = nil
+        happyUntil = Date().addingTimeInterval(Self.happyDuration)
+        SoundPlayer.shared.play(.clean)
+        triggerActionAnimation(.toiletSuccess)
+        onCoinsEarned?(2)
+    }
+
+    /// Classic discipline response for naughty/attention-only moments.
+    /// This intentionally avoids adding a persistent training meter; it
+    /// resolves the transient attention beat and gives a small mood save.
+    func discipline() {
+        guard isDisciplineDue else { return }
+        feedRejectedUntil = nil
+        disciplineDueUntil = nil
+        if happy == 0 {
+            happy = 1
+            happyZeroSeconds = 0
+        }
+        SoundPlayer.shared.play(.angry)
+        triggerActionAnimation(.discipline)
+    }
+
     private func triggerActionAnimation(_ kind: ActionAnimation) {
         actionAnimation = kind
         // Map ActionAnimation → sprite PetMode for behavior engine
@@ -478,10 +616,21 @@ final class PetState: ObservableObject {
         case .medicine: spriteMode = .medic
         case .pooping:  spriteMode = .poopAct
         case .cleaning: spriteMode = .cleanAct
+        case .discipline: spriteMode = .huff
+        case .toiletSuccess: spriteMode = .poopAct
+        case .feedRejected: spriteMode = .lookaway
+        case .hatch, .stageUp: spriteMode = .happy
         }
         activeBehavior = .actionFeedback(spriteMode)
 
-        let deadline = DispatchTime.now() + .milliseconds(900)
+        let durationMs: Int
+        switch kind {
+        case .hatch, .stageUp:
+            durationMs = 1400
+        default:
+            durationMs = 900
+        }
+        let deadline = DispatchTime.now() + .milliseconds(durationMs)
         DispatchQueue.main.asyncAfter(deadline: deadline) { [weak self] in
             guard let self else { return }
             if self.actionAnimation == kind {
@@ -496,7 +645,7 @@ final class PetState: ObservableObject {
     private func schedulePoopIfNeeded() {
         guard stage == .child || stage == .adult || stage == .elder else { return }
         // Don't stack: if one is already due, leave it.
-        if poopDueAt != nil { return }
+        if poopDueAt != nil || needsPoop { return }
         poopDueAt = Date().addingTimeInterval(Self.poopDelayActiveSeconds)
     }
 
@@ -555,19 +704,30 @@ final class PetState: ObservableObject {
     func runCareTick(now: Date, activeSeconds: Double) {
         guard stage == .child || stage == .adult || stage == .elder else { return }
         guard !isAsleep else { return }
+        expireTransientDeadlines(now: now)
 
-        // Scheduled poop spawn — fix the pile at the pet's current x so
-        // it stays where it was dropped, with a small jitter to avoid
-        // exact overlap when multiple piles accumulate nearby.
-        if let due = poopDueAt, now >= due, poopPiles.count < 3 {
-            let jitter = CGFloat.random(in: -14...14)
-            let offset = max(Self.heldMinX,
-                             min(Self.heldMaxX, petX + Self.petPoopOffsetX + jitter))
-            poopPiles.append(PoopPile(xOffset: offset))
-            if lastPoopAt == nil { lastPoopAt = now }
-            poopDueAt = nil
-            triggerActionAnimation(.pooping)
-            SoundPlayer.shared.play(.clean) // TODO: dedicated poop_spawn.wav
+        // Scheduled poop flow — first show a short "needs toilet"
+        // warning window. If ignored, create the floor pile as before.
+        if let due = poopDueAt, now >= due {
+            if poopPiles.count >= 3 {
+                poopDueAt = nil
+                needsPoopUntil = nil
+            } else if let warningUntil = needsPoopUntil {
+                if now >= warningUntil {
+                    let jitter = CGFloat.random(in: -14...14)
+                    let offset = max(Self.heldMinX,
+                                     min(Self.heldMaxX, petX + Self.petPoopOffsetX + jitter))
+                    poopPiles.append(PoopPile(xOffset: offset))
+                    if lastPoopAt == nil { lastPoopAt = now }
+                    poopDueAt = nil
+                    needsPoopUntil = nil
+                    triggerActionAnimation(.pooping)
+                    SoundPlayer.shared.play(.clean) // TODO: dedicated poop_spawn.wav
+                }
+            } else {
+                needsPoopUntil = now.addingTimeInterval(Self.poopWarningSeconds)
+                SoundPlayer.shared.play(.rest)
+            }
         }
 
         // Neglect timer: accumulates while any vital is at 0
@@ -583,6 +743,12 @@ final class PetState: ObservableObject {
         hungerZeroSeconds = (hunger == 0) ? hungerZeroSeconds + activeSeconds : 0
         happyZeroSeconds  = (happy == 0)  ? happyZeroSeconds + activeSeconds  : 0
         sickSeconds       = sick ? sickSeconds + activeSeconds : 0
+
+        // Critical-warning siren — plays a loud 5s two-tone alert the
+        // moment the pet crosses the 60% mark on any death timer, then
+        // repeats every 15s until the user either saves it (vitals
+        // recover, illness treated) or the death trigger below fires.
+        maintainCriticalWarning(now: now)
 
         if hungerZeroSeconds >= Self.hungerDeathSeconds
             || happyZeroSeconds >= Self.happyDeathSeconds
@@ -628,6 +794,35 @@ final class PetState: ObservableObject {
         medicineDosesRemaining = 2
         neglectSeconds = 0
         SoundPlayer.shared.play(.angry)  // reuse the low-buzz sound as an illness cue
+    }
+
+    private func expireTransientDeadlines(now: Date) {
+        if let until = feedRejectedUntil, now >= until {
+            feedRejectedUntil = nil
+        }
+        if let until = disciplineDueUntil, now >= until {
+            disciplineDueUntil = nil
+        }
+    }
+
+    /// Replay interval for the critical-warning siren. The sound itself
+    /// is ~5s long; 15s means the user gets a fresh 5s alert followed
+    /// by 10s of quiet before the next one — enough to notice without
+    /// becoming actively unlistenable.
+    private static let criticalWarningReplayInterval: TimeInterval = 15.0
+
+    /// Schedule / fire the critical-warning siren. Called once per
+    /// `runCareTick`. Fire-and-forget via `SoundPlayer`; we only track
+    /// the next scheduled play time on `self`.
+    private func maintainCriticalWarning(now: Date) {
+        guard isCriticallyLow else {
+            // Recovered (vitals back above threshold, or pet healed).
+            criticalWarningNextAt = nil
+            return
+        }
+        if let next = criticalWarningNextAt, now < next { return }
+        SoundPlayer.shared.play(.danger)
+        criticalWarningNextAt = now.addingTimeInterval(Self.criticalWarningReplayInterval)
     }
 
     private func triggerDeath() {
@@ -743,10 +938,13 @@ final class PetState: ObservableObject {
         // Lifecycle-transition sound cues
         if old == .egg && new == .child {
             SoundPlayer.shared.play(.hatch)
+            triggerActionAnimation(.hatch)
         }
         if new == .departed {
             SoundPlayer.shared.play(.depart)
             NotificationCenter.default.post(name: .notchPetDidDepart, object: nil)
+        } else if old != .egg && (new == .adult || new == .elder) {
+            triggerActionAnimation(.stageUp)
         }
 
         // Schedule stage-based sickness roll on entering adult/elder
@@ -780,6 +978,7 @@ final class PetState: ObservableObject {
     /// instead of rolling a random species.
     func rebornAsNewGeneration() {
         awaitingRebornConfirm = false
+        farewellAnimationShown = false
 
         // Decide species/personality/parents for the next generation.
         let inheritedSpecies: Species
@@ -825,6 +1024,7 @@ final class PetState: ObservableObject {
         poopPiles.removeAll()
         lastPoopAt = nil
         poopDueAt = nil
+        needsPoopUntil = nil
         ageActiveSeconds = 0
         stage = .egg
         departedAt = nil
@@ -850,6 +1050,9 @@ final class PetState: ObservableObject {
         activeBehavior = .idle
         isBeingHeld = false
         tapReactionUntil = nil
+        feedRejectedUntil = nil
+        disciplineDueUntil = nil
+        actionAnimation = nil
     }
 
     // MARK: - Tuning constants
@@ -885,6 +1088,18 @@ final class PetState: ObservableObject {
         return 25.0
         #else
         return 5 * 60.0
+        #endif
+    }()
+
+    /// Pre-poop response window. DEBUG stays short for smoke testing;
+    /// release gives users enough time to notice the notch cue.
+    static var poopWarningSeconds: Double = {
+        if let raw = ProcessInfo.processInfo.environment["NOTCHPET_POOP_WARN_SEC"],
+           let v = Double(raw), v > 0 { return v }
+        #if DEBUG
+        return 12.0
+        #else
+        return 60.0
         #endif
     }()
 

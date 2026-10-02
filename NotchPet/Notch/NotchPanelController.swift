@@ -5,10 +5,11 @@ import Combine
 @MainActor
 final class NotchPanelController: NSObject {
     /// Relative magnitude of a shake effect. `light` is the default
-    /// feedback for `feed/play/rest`; `heavy` is reserved for the death
-    /// → reborn transition.
+    /// feedback for normal care actions, `medium` is for attention events,
+    /// and `heavy` is reserved for the death → reborn transition.
     enum ShakeIntensity {
         case light
+        case medium
         case heavy
     }
 
@@ -21,23 +22,17 @@ final class NotchPanelController: NSObject {
     private var globalClickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
     private var shakeTask: Task<Void, Never>?
-    /// 30 Hz timer that polls the mouse cursor against the pet hit rect
-    /// while the panel is expanded. Polling is the reliable path — built-in
-    /// tracking / hover machinery doesn't fire consistently in a
-    /// non-activating panel, even with `acceptsMouseMovedEvents = true`.
-    private var cursorPollTimer: Timer?
-    private var isShowingPetCursor: Bool = false
 
     /// The built-in MacBook screen that physically owns the notch. Resolved
     /// once at init; re-resolved on screen change so external display
     /// reconfigurations keep the pet on the MacBook.
     private var hostScreen: NSScreen
 
-    /// Collapsed frame. The panel is exactly as tall as the physical notch
-    /// cavity, but extends sideways by `sideExtension` on each side so the
-    /// pet sprite and status icon have real estate that sits on the menu
-    /// bar to the left / right of the physical cutout. The black background
-    /// flows seamlessly into the notch because the cavity is already black.
+    /// Collapsed frame. The strip matches the physical notch exactly in
+    /// height so it sits flush with the real notch instead of bulging below
+    /// it; it only extends horizontally (the side extensions) to make room
+    /// for the pet and status icon. The pet sprite is sized to this height
+    /// (see `CollapsedNotchView`) so it never needs the strip to grow taller.
     private var collapsedSize: CGSize {
         let notch = hostScreen.notchSize ?? CGSize(width: 200, height: 32)
         return CGSize(
@@ -46,23 +41,31 @@ final class NotchPanelController: NSObject {
         )
     }
 
+    /// Physical notch height, used to size the collapsed pet sprite so it
+    /// fits flush within the notch. Resolved from the host screen's safe-area
+    /// inset; constant for a given MacBook.
+    private var notchHeight: CGFloat {
+        hostScreen.notchSize?.height ?? 32
+    }
+
     /// Expanded frame shown below the notch (room popover). Block 6
     /// polish: wider + slightly shorter so the room reads as a horizontal
     /// house with room for furniture on both sides of the pet.
     private let expandedSize = CGSize(width: 540, height: 400)
 
     /// How many points the collapsed strip extends beyond the physical notch
-    /// on each horizontal side. The pet (22pt) and status icon (16pt) live
-    /// inside these extensions.
+    /// on each horizontal side. The pet and status icon live inside these
+    /// extensions.
     static let sideExtension: CGFloat = 34
 
     /// Extra width added to the collapsed panel while the mouse is hovering.
     /// Split evenly on both sides so the pet / icon drift outward slightly.
     private static let hoverWidthGrowth: CGFloat = 10
-    /// Extra height added on hover. The panel is top-anchored to the screen,
-    /// so the growth drops downward and the bottom corners puff out from the
-    /// physical notch cavity.
-    private static let hoverHeightGrowth: CGFloat = 3
+    /// Extra height added on hover. Kept at 0 so the strip stays flush with
+    /// the physical notch — the panel is top-anchored, so any height growth
+    /// would drop *below* the real notch and make the strip bulge. Hover
+    /// feedback is horizontal-only (`hoverWidthGrowth`).
+    private static let hoverHeightGrowth: CGFloat = 0
 
     init(screen: NSScreen, petState: PetState, inventory: PlayerInventory) {
         self.hostScreen = screen
@@ -95,6 +98,7 @@ final class NotchPanelController: NSObject {
             petState: petState,
             inventory: inventory,
             sideExtension: Self.sideExtension,
+            collapsedHeight: notchHeight,
             onShake: { [weak self] intensity in
                 self?.shake(intensity)
             },
@@ -136,7 +140,6 @@ final class NotchPanelController: NSObject {
         petState.isHovered = false
         animateFrame(to: expandedFrame())
         installDismissMonitors()
-        startCursorPolling()
     }
 
     func collapse() {
@@ -144,7 +147,6 @@ final class NotchPanelController: NSObject {
         removeDismissMonitors()
         uiState.isExpanded = false
         animateFrame(to: collapsedFrame(hovered: uiState.isHovered))
-        stopCursorPolling()
     }
 
     private func animateFrame(to frame: NSRect, duration: TimeInterval = 0.28) {
@@ -152,64 +154,6 @@ final class NotchPanelController: NSObject {
             ctx.duration = duration
             ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             panel.animator().setFrame(frame, display: true)
-        }
-    }
-
-    // MARK: - Custom cursor polling
-    //
-    // A non-activating panel doesn't reliably deliver mouseMoved events
-    // to child views — tracking areas and SwiftUI `.onHover` both go dark.
-    // We bypass the event layer entirely and poll the global mouse
-    // position against a computed pet rect. Simple, cheap, always works.
-
-    private func startCursorPolling() {
-        stopCursorPolling()
-        let t = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.pollCursor() }
-        }
-        RunLoop.main.add(t, forMode: .common)
-        cursorPollTimer = t
-    }
-
-    private func stopCursorPolling() {
-        cursorPollTimer?.invalidate()
-        cursorPollTimer = nil
-        if isShowingPetCursor {
-            NSCursor.arrow.set()
-            isShowingPetCursor = false
-        }
-    }
-
-    /// Screen-space center of the pet sprite, given current panel frame
-    /// and pet offsets. RoomView layout is a fixed VStack (header / spacer
-    /// / pet / spacer / hearts / actions), so the pet's vertical centre
-    /// from the top of the expanded 540×400 panel is stable — tuned by
-    /// eye to land on the sprite.
-    private static let petYFromPanelTop: CGFloat = 190
-    /// Half-size of the square hit area around the pet (`RoomView.petHitSize`).
-    private static let petHitRadius: CGFloat = 42
-
-    private func pollCursor() {
-        guard uiState.isExpanded, panel.isVisible else { return }
-
-        let frame = panel.frame
-        let mouse = NSEvent.mouseLocation
-
-        // Pet centre in screen coords (NSEvent uses bottom-left origin,
-        // panel.frame.maxY is the top edge of the panel in screen coords).
-        let petScreenX = frame.origin.x + frame.width / 2 + petState.petX
-        let petScreenY = frame.maxY - Self.petYFromPanelTop - petState.petY
-
-        let dx = abs(mouse.x - petScreenX)
-        let dy = abs(mouse.y - petScreenY)
-        let inside = dx < Self.petHitRadius && dy < Self.petHitRadius
-
-        if inside && petState.canInteract {
-            PetCursors.shared.cursor(for: petState).set()
-            isShowingPetCursor = true
-        } else if isShowingPetCursor {
-            NSCursor.arrow.set()
-            isShowingPetCursor = false
         }
     }
 
@@ -235,7 +179,7 @@ final class NotchPanelController: NSObject {
     /// so a mid-shake screen-parameter change can't leave it off-center.
     func shake(_ intensity: ShakeIntensity) {
         guard AppSettings.shared.shakeEnabled else { return }
-        // A new heavy shake supersedes any in-progress light shake.
+        // Stronger shakes supersede weaker in-progress feedback.
         if shakeTask != nil, intensity == .light { return }
         shakeTask?.cancel()
 
@@ -244,6 +188,9 @@ final class NotchPanelController: NSObject {
         switch intensity {
         case .light:
             amplitude = 1.5
+            stepDuration = 0.035
+        case .medium:
+            amplitude = 2.5
             stepDuration = 0.035
         case .heavy:
             amplitude = 4

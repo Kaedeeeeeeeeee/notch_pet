@@ -19,23 +19,17 @@ struct RoomView: View {
     @State private var isMemorialBookShowing: Bool = false
     @State private var editingName: String? = nil
     @FocusState private var nameFieldFocused: Bool
-    /// Transient UI flag — true once the farewell animation has finished
-    /// playing for the current departed→reborn cycle. Reset when the pet
-    /// returns to `.egg` via `rebornAsNewGeneration()` so the next
-    /// generation's death also gets a proper goodbye.
-    @State private var farewellFinished: Bool = false
-
     /// True while the farewell animation is running — sprite fades in
     /// place and ascension particles rise from the pet's real position.
+    /// The "already played" flag lives on `PetState` so it survives the
+    /// RoomView being destroyed when the notch panel collapses.
     private var isPlayingFarewell: Bool {
-        petState.awaitingRebornConfirm && !farewellFinished
+        petState.awaitingRebornConfirm && !petState.farewellAnimationShown
     }
 
-    /// Pet sprite frame size. Sprites are now rendered onto a 26×26
-    /// canvas (16×16 art + 5-pixel padding each side so animation
-    /// offsets like bounce / held don't clip). Size 98 = 60 × 26/16,
-    /// which keeps the visible animal at the same on-screen size as
-    /// the old 16×16 sprite at 60pt.
+    /// Pet sprite frame size. The current imported cat art is 32×32 and
+    /// fills its frame vertically, so 98pt keeps it readable in the room
+    /// without covering the top chrome.
     static let petSize: CGFloat = 98
     /// Hit / cursor area around the pet — slightly larger than the
     /// sprite so tiny taps near the silhouette still register.
@@ -90,10 +84,9 @@ struct RoomView: View {
                 let floorY = RoomGeometry.floorY(in: geo.size)
                 // Sprite (petSize) is centred in the larger hit rect
                 // (petHitSize). We want the sprite's visual bottom to
-                // sit on floorY, so rest Y (centre of hit rect) is one
-                // sprite-half above floor. `petFootInset` compensates
-                // for any transparent padding below the visible feet
-                // inside the sprite frame (positive ⇒ push pet down).
+                // sit on the wall/floor boundary, so rest Y is one
+                // sprite-half above floor. `petFootInset` is only for
+                // imported sheets with transparent padding under the feet.
                 let restY  = floorY - Self.petSize / 2 + RoomGeometry.petFootInset
 
                 ZStack(alignment: .topLeading) {
@@ -106,6 +99,7 @@ struct RoomView: View {
                         // the existing `petX` walking logic.
                         PetView(size: Self.petSize, petState: petState, applyMovement: false)
                             .shadow(color: Color.black.opacity(0.4), radius: 4, y: 2)
+                            .modifier(AttentionShakeModifier(active: petState.shouldShakeForAttention))
                             // During farewell the sprite fades in-place
                             // so the ascending halos appear to rise from
                             // its actual spot instead of a duplicate
@@ -121,12 +115,15 @@ struct RoomView: View {
                             ActionAnimationOverlay(animation: anim, petSize: Self.petSize)
                                 .id(ObjectIdentifier(petState).hashValue ^ anim.hashValue)
                         }
+                        if petState.needsPoop {
+                            NeedsPoopOverlay(petSize: Self.petSize)
+                        }
                     }
                     .frame(width: Self.petHitSize, height: Self.petHitSize)
                     .contentShape(Rectangle())
                     .position(x: geo.size.width / 2 + petState.petX,
                               y: restY + petState.petY)
-                    .animation(petState.isBeingHeld ? nil : .easeInOut(duration: 0.3),
+                    .animation(petState.isBeingHeld ? nil : .linear(duration: 0.08),
                                value: petState.petX)
                     .animation(petState.isBeingHeld ? nil : .spring(response: 0.45, dampingFraction: 0.6),
                                value: petState.petY)
@@ -142,13 +139,22 @@ struct RoomView: View {
 
                     // Poop piles — each pile is anchored at the room-
                     // relative xOffset captured when it spawned, so
-                    // piles stay put instead of trailing the pet.
+                    // piles stay put instead of trailing the pet. Each
+                    // pile carries its own buzzing fly above it (skipped
+                    // while asleep so the room reads as quiet).
                     ForEach(petState.poopPiles) { pile in
                         PoopView(size: 24)
                             .position(
                                 x: geo.size.width / 2 + pile.xOffset,
                                 y: floorY - RoomGeometry.poopHalfHeight
                             )
+                        if !petState.isAsleep {
+                            PoopFliesOverlay()
+                                .position(
+                                    x: geo.size.width / 2 + pile.xOffset + 6,
+                                    y: floorY - RoomGeometry.poopHalfHeight * 2 - 6
+                                )
+                        }
                     }
 
                     // Sleep cue — pixel-style Zzz rising from just above
@@ -159,7 +165,7 @@ struct RoomView: View {
                         SleepZzzOverlay()
                             .position(
                                 x: geo.size.width / 2 + petState.petX + Self.petSize * 0.30,
-                                y: restY - Self.petSize / 2 - 8
+                                y: restY - Self.petSize * 0.32
                             )
                     }
 
@@ -249,10 +255,10 @@ struct RoomView: View {
                 .frame(width: geo.size.width, height: geo.size.height)
             }
 
-            if petState.awaitingRebornConfirm && !farewellFinished {
+            if petState.awaitingRebornConfirm && !petState.farewellAnimationShown {
                 FarewellOverlay(petState: petState) {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        farewellFinished = true
+                        petState.farewellAnimationShown = true
                     }
                 }
             } else if petState.awaitingRebornConfirm {
@@ -290,11 +296,6 @@ struct RoomView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onChange(of: petState.stage) { _, newStage in
-            // Reset the farewell flag once the pet reincarnates so the
-            // next generation's death will replay the goodbye animation.
-            if newStage == .egg { farewellFinished = false }
-        }
     }
 
     private var headerRow: some View {
@@ -443,12 +444,10 @@ enum RoomGeometry {
     /// Y (inside the panel) of the wall-back furniture slot.
     /// Preserves the old centred `-95` from centre at a ~400pt panel.
     static let wallShelfY: CGFloat = 110
-    /// Transparent padding below the sprite feet inside the 98pt pet
-    /// frame. The 26×26 render canvas has 5 pixels of padding below
-    /// the 16-row art; at 98pt / 26px ≈ 3.77pt per pixel, that's ~19pt
-    /// of empty space below the visible feet. Positive petFootInset
-    /// pushes the pet down so the feet still land on the floor line.
-    static let petFootInset: CGFloat = 19
+    /// Transparent padding below the sprite feet inside the pet frame.
+    /// The Elthen cat import reaches the bottom row, so no correction is
+    /// needed; positive values are reserved for future padded sheets.
+    static let petFootInset: CGFloat = 0
     /// Half-height of the poop sprite at size 24, used to bottom-anchor
     /// the poop pile on the floor line.
     static let poopHalfHeight: CGFloat = 12
@@ -573,23 +572,72 @@ private struct ActionBar: View {
                 onShake(.light)
             }
             ActionButton(
-                label: lang.medicineAction,
-                icon: .medicine,
-                enabled: petState.canInteract && petState.sick
+                label: lang.restAction,
+                icon: .rest,
+                enabled: petState.canInteract
             ) {
-                petState.takeMedicine()
+                petState.rest()
                 onShake(.light)
             }
             ActionButton(
-                label: lang.cleanAction,
-                icon: .clean,
-                enabled: petState.canInteract && petState.poops > 0
+                label: fourthAction.label,
+                icon: fourthAction.icon,
+                enabled: fourthAction.enabled
             ) {
-                petState.clean()
-                onShake(.light)
+                fourthAction.perform()
+                onShake(fourthAction.shake)
             }
         }
     }
+
+    private var fourthAction: ActionSlot {
+        if petState.sick {
+            return ActionSlot(
+                label: lang.medicineAction,
+                icon: .medicine,
+                enabled: petState.canInteract,
+                shake: .light
+            ) { petState.takeMedicine() }
+        }
+        if petState.needsPoop {
+            return ActionSlot(
+                label: lang.toiletAction,
+                icon: .toilet,
+                enabled: petState.canInteract,
+                shake: .medium
+            ) { petState.useToilet() }
+        }
+        if petState.poops > 0 {
+            return ActionSlot(
+                label: lang.cleanAction,
+                icon: .clean,
+                enabled: petState.canInteract,
+                shake: .light
+            ) { petState.clean() }
+        }
+        if petState.isDisciplineDue {
+            return ActionSlot(
+                label: lang.disciplineAction,
+                icon: .discipline,
+                enabled: petState.canInteract,
+                shake: .medium
+            ) { petState.discipline() }
+        }
+        return ActionSlot(
+            label: lang.cleanAction,
+            icon: .clean,
+            enabled: false,
+            shake: .light
+        ) {}
+    }
+}
+
+private struct ActionSlot {
+    let label: String
+    let icon: ActionIconView.Kind
+    let enabled: Bool
+    let shake: NotchPanelController.ShakeIntensity
+    let perform: () -> Void
 }
 
 private struct ActionButton: View {
@@ -623,3 +671,14 @@ private struct ActionButton: View {
     }
 }
 
+private struct AttentionShakeModifier: ViewModifier {
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !active)) { ctx in
+            let t = ctx.date.timeIntervalSinceReferenceDate
+            let shake = active ? CGFloat(sin(t * (2 * .pi / 0.18))) * 2.2 : 0
+            content.offset(x: shake)
+        }
+    }
+}

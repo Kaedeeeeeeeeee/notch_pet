@@ -40,12 +40,14 @@ struct PetView: View {
                 frameIndex: frame
             )
 
+            let renderHeight = size * CGFloat(cg.height) / max(CGFloat(cg.width), 1)
+
             Image(decorative: cg, scale: 1.0)
                 .interpolation(.none)
                 .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: size, height: size)
+                .frame(width: size, height: renderHeight)
                 .scaleEffect(x: petState.facingRight ? 1 : -1, y: 1)
+                .frame(width: size, height: size, alignment: .bottom)
         }
         .offset(x: applyMovement ? petState.petX : 0)
         .animation(applyMovement ? .easeInOut(duration: 0.3) : nil, value: petState.petX)

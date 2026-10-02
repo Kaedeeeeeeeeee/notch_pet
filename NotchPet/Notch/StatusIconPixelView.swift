@@ -18,6 +18,8 @@ struct StatusIconPixelView: View {
         case sick
         case poop      // Block 6: at least one poop on the floor
         case fly       // used above pet head when poop is around
+        case toilet    // pre-poop warning
+        case discipline
     }
 
     var body: some View {
@@ -55,6 +57,8 @@ struct StatusIconPixelView: View {
         case .sick:      return Color(red: 0.82, green: 0.52, blue: 0.72)
         case .poop:      return Color(red: 0.55, green: 0.35, blue: 0.20)
         case .fly:       return Color(red: 0.25, green: 0.25, blue: 0.25)
+        case .toilet:    return Color(red: 0.54, green: 0.76, blue: 0.88)
+        case .discipline:return Color(red: 0.95, green: 0.42, blue: 0.16)
         }
     }
 
@@ -71,6 +75,8 @@ struct StatusIconPixelView: View {
         case .sick:      return sickCells
         case .poop:      return poopCells
         case .fly:       return flyCells
+        case .toilet:    return toiletCells
+        case .discipline:return exclamationCells
         }
     }
 
@@ -229,6 +235,46 @@ struct StatusIconPixelView: View {
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ])
+
+    /// Tiny toilet bowl used during the pre-poop "catch it in time" cue.
+    private static let toiletCells: [(Int, Int)] = unpack([
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0],
+        [0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ])
+
+    /// Bold exclamation mark for discipline / false-attention moments.
+    private static let exclamationCells: [(Int, Int)] = unpack([
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],

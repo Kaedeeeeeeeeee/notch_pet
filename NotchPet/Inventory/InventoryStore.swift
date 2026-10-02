@@ -31,6 +31,13 @@ final class InventoryStore {
     nonisolated static let currentSchema: Int = 1
 
     private let fileURL: URL
+    /// Serial background queue for JSON encode + disk write. Same
+    /// rationale as `PetStateStore.ioQueue` — keep `fsync` off the
+    /// main actor so care-action coin earns never block the UI.
+    private let ioQueue = DispatchQueue(
+        label: "com.notchpet.inventorystore.io",
+        qos: .utility
+    )
 
     init() {
         let fm = FileManager.default
@@ -67,11 +74,33 @@ final class InventoryStore {
         )
     }
 
+    /// Fire-and-forget save. Snapshot is captured synchronously on the
+    /// main actor, then the encode + atomic write run on `ioQueue`.
     func save(_ inventory: PlayerInventory) {
         let snap = InventorySnapshot(from: inventory)
+        let url = fileURL
+        ioQueue.async {
+            Self.writeSnapshot(snap, to: url)
+        }
+    }
+
+    /// Synchronous flush for `applicationWillTerminate` — blocks the
+    /// caller until every queued write has landed on disk.
+    func flushSync(_ inventory: PlayerInventory) {
+        let snap = InventorySnapshot(from: inventory)
+        let url = fileURL
+        ioQueue.sync {
+            Self.writeSnapshot(snap, to: url)
+        }
+    }
+
+    private nonisolated static func writeSnapshot(
+        _ snap: InventorySnapshot,
+        to url: URL
+    ) {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         guard let data = try? encoder.encode(snap) else { return }
-        try? data.write(to: fileURL, options: [.atomic])
+        try? data.write(to: url, options: [.atomic])
     }
 }

@@ -1,8 +1,8 @@
 import Foundation
 
 /// Drives ambient pet behaviors: walking, pecking, dancing, etc.
-/// Called each TimeService tick (~1Hz). The engine decides when the pet
-/// should start a new behavior and advances walking movement.
+/// Called by TimeService's high-frequency behavior tick. The engine decides
+/// when the pet should start a new behavior and advances walking movement.
 @MainActor
 final class PetBehaviorEngine {
     private var nextBehaviorAt: Date = Date().addingTimeInterval(3)

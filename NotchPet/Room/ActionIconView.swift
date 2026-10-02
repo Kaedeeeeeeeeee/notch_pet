@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Pixel-art icons for the three RoomView action buttons. Each icon is a
+/// Pixel-art icons for the RoomView action buttons. Each icon is a
 /// 16x16 grid rendered via SwiftUI Canvas, matching the chick sprite's
 /// aesthetic so the whole popover feels one-piece.
 struct ActionIconView: View {
@@ -8,7 +8,7 @@ struct ActionIconView: View {
     let size: CGFloat
 
     enum Kind {
-        case feed, play, rest, medicine, clean
+        case feed, play, rest, medicine, clean, toilet, discipline
     }
 
     var body: some View {
@@ -43,6 +43,8 @@ struct ActionIconView: View {
         case .rest: return Self.restPixels
         case .medicine: return Self.medicinePixels
         case .clean: return Self.cleanPixels
+        case .toilet: return Self.toiletPixels
+        case .discipline: return Self.disciplinePixels
         }
     }
 
@@ -260,6 +262,94 @@ struct ActionIconView: View {
         }
         var out: [(Int, Int, Color)] = []
         for (row, line) in cleanShape.enumerated() {
+            for (col, cell) in line.enumerated() {
+                if let c = color(cell) { out.append((col, row, c)) }
+            }
+        }
+        return out
+    }()
+
+    // MARK: - Toilet: tiny seat + water
+
+    private static let toiletShape: [[Int]] = [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,0,1,2,3,3,3,3,2,1,0,0,0,0],
+        [0,0,0,0,1,2,3,3,3,3,2,1,0,0,0,0],
+        [0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],
+        [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,1,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,0,0,1,4,4,4,1,0,0,0,0,0],
+        [0,0,0,0,0,1,4,4,4,4,4,1,0,0,0,0],
+        [0,0,0,0,1,4,4,4,4,4,4,4,1,0,0,0],
+        [0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,0,0,0,1,5,5,5,5,5,1,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ]
+
+    private static let toiletPixels: [(Int, Int, Color)] = {
+        let outline = Color(red: 0.18, green: 0.22, blue: 0.28)
+        let porcelain = Color(red: 0.94, green: 0.96, blue: 0.92)
+        let water = Color(red: 0.42, green: 0.74, blue: 0.95)
+        let shadow = Color(red: 0.72, green: 0.78, blue: 0.78)
+        let base = Color(red: 0.65, green: 0.70, blue: 0.70)
+
+        func color(_ cell: Int) -> Color? {
+            switch cell {
+            case 1: return outline
+            case 2: return porcelain
+            case 3: return water
+            case 4: return shadow
+            case 5: return base
+            default: return nil
+            }
+        }
+        var out: [(Int, Int, Color)] = []
+        for (row, line) in toiletShape.enumerated() {
+            for (col, cell) in line.enumerated() {
+                if let c = color(cell) { out.append((col, row, c)) }
+            }
+        }
+        return out
+    }()
+
+    // MARK: - Discipline: bold exclamation
+
+    private static let disciplineShape: [[Int]] = [
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,0,1,2,2,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,2,2,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,1,2,2,2,2,1,0,0,0,0,0],
+        [0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    ]
+
+    private static let disciplinePixels: [(Int, Int, Color)] = {
+        let outline = Color(red: 0.22, green: 0.10, blue: 0.06)
+        let fill = Color(red: 1.00, green: 0.48, blue: 0.12)
+
+        func color(_ cell: Int) -> Color? {
+            switch cell {
+            case 1: return outline
+            case 2: return fill
+            default: return nil
+            }
+        }
+        var out: [(Int, Int, Color)] = []
+        for (row, line) in disciplineShape.enumerated() {
             for (col, cell) in line.enumerated() {
                 if let c = color(cell) { out.append((col, row, c)) }
             }

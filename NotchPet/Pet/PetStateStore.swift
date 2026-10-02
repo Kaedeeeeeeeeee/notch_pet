@@ -170,6 +170,16 @@ final class PetStateStore {
     nonisolated static let currentSchema: Int = 5
 
     private let fileURL: URL
+    /// Serial background queue for JSON encode + disk write. Keeping
+    /// this off `@MainActor` is critical — `Data.write(atomic:)` issues
+    /// an `fsync` on rename, which can stall for seconds when APFS is
+    /// under load (Time Machine snapshot, Spotlight indexing) or when
+    /// the OS fires multiple sleep notifications in quick succession.
+    /// Using a serial queue preserves save order without blocking UI.
+    private let ioQueue = DispatchQueue(
+        label: "com.notchpet.petstore.io",
+        qos: .utility
+    )
 
     init() {
         let fm = FileManager.default
@@ -196,6 +206,16 @@ final class PetStateStore {
         if let snapshot = try? decoder.decode(PetStateSnapshot.self, from: data),
            snapshot.schemaVersion >= 3 {
             let state = snapshot.materialize()
+            // Self-heal: a save could land on disk with stage==.departed
+            // but departedAt missing (observed in the wild). Without this
+            // backfill the reborn flow never fires and the user is stuck
+            // looking at a dead pet forever. Treat it as "died long ago"
+            // so the memorial card appears immediately.
+            if state.stage == .departed && state.departedAt == nil {
+                state.departedAt = Date().addingTimeInterval(
+                    -LifecycleClock.departGraceSeconds
+                )
+            }
             // awaitingRebornConfirm is transient — infer from persisted state
             // so the reborn overlay reappears after an app restart.
             if state.stage == .departed, let dep = state.departedAt,
@@ -249,12 +269,40 @@ final class PetStateStore {
         Species.allCases.randomElement() ?? .chick
     }
 
+    /// Fire-and-forget save. Snapshot is captured synchronously on the
+    /// main actor (cheap — just copying value-typed fields), then the
+    /// JSON encode + atomic write run on `ioQueue`. Returns immediately.
     func save(_ state: PetState) {
         let snapshot = PetStateSnapshot(from: state)
+        let url = fileURL
+        ioQueue.async {
+            Self.writeSnapshot(snapshot, to: url)
+        }
+    }
+
+    /// Synchronous flush used on app termination — blocks only the
+    /// caller (which is already tearing down) until every queued write
+    /// has landed on disk. Safe to call from `@MainActor` because
+    /// `applicationWillTerminate` is the last thing before exit.
+    func flushSync(_ state: PetState) {
+        let snapshot = PetStateSnapshot(from: state)
+        let url = fileURL
+        ioQueue.sync {
+            Self.writeSnapshot(snapshot, to: url)
+        }
+    }
+
+    /// Shared encode+write body. Runs on `ioQueue`; touches no
+    /// `@MainActor` state (the `PetStateSnapshot` it receives is a
+    /// pure value type).
+    private nonisolated static func writeSnapshot(
+        _ snapshot: PetStateSnapshot,
+        to url: URL
+    ) {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         guard let data = try? encoder.encode(snapshot) else { return }
-        try? data.write(to: fileURL, options: [.atomic])
+        try? data.write(to: url, options: [.atomic])
     }
 }

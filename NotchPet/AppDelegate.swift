@@ -55,9 +55,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // `flush()` / `flushSync()` block the main thread just long
+        // enough for any queued background write to land — acceptable
+        // during termination, where we need the data on disk before
+        // exit more than we need responsiveness.
         timeService?.flush()
         if let inventory, let inventoryStore {
-            inventoryStore.save(inventory)
+            inventoryStore.flushSync(inventory)
         }
     }
 

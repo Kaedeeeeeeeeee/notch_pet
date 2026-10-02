@@ -156,6 +156,23 @@ final class PetSpriteLibrary {
             keys.append("\(sp)_cheerful_\(stagePart)_idle")
             keys.append("\(sp)_cheerful_adult_idle")
         }
+        // Shared-art fallback used by the Elthen cat import. This lets every
+        // species/personality resolve to the compact single-cat spritesheet.
+        switch stage {
+        case .egg:
+            keys.append("chick_egg_idle")
+        case .departed:
+            keys.append("chick_departed_idle")
+        case .child:
+            keys.append("chick_child_\(mode.tagName)")
+            keys.append("chick_child_idle")
+        case .adult, .elder:
+            let stagePart = (stage == .adult) ? "adult" : "elder"
+            keys.append("chick_cheerful_\(stagePart)_\(mode.tagName)")
+            keys.append("chick_cheerful_\(stagePart)_idle")
+            keys.append("chick_cheerful_adult_\(mode.tagName)")
+            keys.append("chick_cheerful_adult_idle")
+        }
         // Ultimate catch-all
         keys.append("chick_cheerful_adult_idle")
         keys.append("chick_egg_idle")

@@ -44,8 +44,11 @@ extension AppLanguage {
     // Actions
     var feedAction: String { pick("喂食", "えさ", "Feed") }
     var playAction: String { pick("玩耍", "あそぶ", "Play") }
+    var restAction: String { pick("休息", "ねる", "Rest") }
     var medicineAction: String { pick("吃药", "くすり", "Medicine") }
     var cleanAction: String { pick("扫除", "そうじ", "Clean") }
+    var toiletAction: String { pick("厕所", "トイレ", "Toilet") }
+    var disciplineAction: String { pick("管教", "しつけ", "Discipline") }
 
     // Sleep
     var petSleeping: String { pick("宠物睡着了", "ペットは寝ています", "Pet is sleeping") }

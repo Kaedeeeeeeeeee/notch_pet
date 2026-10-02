@@ -3,6 +3,7 @@
 
 # Xcode
 build/
+build-review/
 DerivedData/
 *.xcuserstate
 xcuserdata/
@@ -23,3 +24,6 @@ tools/aseprite/
 
 # Claude local
 .claude/
+
+# Codex local environment
+.codex/

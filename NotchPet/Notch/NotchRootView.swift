@@ -12,6 +12,9 @@ struct NotchRootView: View {
     /// horizontal side. Used to place the pet / status icon flush against
     /// the left and right extensions rather than inside the cavity.
     let sideExtension: CGFloat
+    /// Height of the collapsed strip (= physical notch height). The pet
+    /// sprite is sized from this so it fits flush within the notch.
+    let collapsedHeight: CGFloat
     /// Block 4 shake callback. Wired by `NotchPanelController` when it
     /// builds the hosting view; invoked by action buttons (and by
     /// departed transitions via a separate Notification path).
@@ -31,7 +34,11 @@ struct NotchRootView: View {
                 )
                     .transition(.opacity)
             } else {
-                CollapsedNotchView(petState: petState, sideExtension: sideExtension)
+                CollapsedNotchView(
+                    petState: petState,
+                    sideExtension: sideExtension,
+                    stripHeight: collapsedHeight
+                )
                     .transition(.opacity)
             }
         }
@@ -69,8 +76,13 @@ struct NotchClipShape: Shape {
 private struct CollapsedNotchView: View {
     @ObservedObject var petState: PetState
     let sideExtension: CGFloat
+    /// Height of the collapsed strip (= physical notch height).
+    let stripHeight: CGFloat
 
-    private let petSide: CGFloat = 22
+    /// Pet sprite is sized to fill the notch height, minus a 2pt margin so
+    /// the head/feet don't kiss the screen edge or the notch lip. Capped at
+    /// 40pt so an unusually tall notch doesn't oversize the sprite.
+    private var petSide: CGFloat { min(40, max(0, stripHeight - 2)) }
     private let iconSide: CGFloat = 16
 
     var body: some View {
@@ -116,12 +128,15 @@ private struct StatusIconView: View {
         if petState.stage == .egg { return nil }
         if petState.stage == .departed { return .departed }
         if petState.isAsleep { return .sleeping }
-        if petState.sick { return .sick }
-        if petState.poops > 0 { return .poop }
-        // Hunger at 0 beats happy at 0 — empty stomach is the most
-        // acute "please do something" beat.
-        if petState.hunger == 0 { return .hungry }
-        if petState.happy == 0 { return .lowMood }
+        switch petState.attentionReason {
+        case .needsPoop: return .toilet
+        case .sick: return .sick
+        case .poop: return .poop
+        case .hungry: return .hungry
+        case .lowMood: return .lowMood
+        case .discipline: return .discipline
+        case nil: break
+        }
         // Two hearts or fewer on either vital: subtle pre-warning.
         if petState.hunger <= 1 { return .hungry }
         if petState.happy <= 1 { return .lowMood }

@@ -49,8 +49,12 @@ def synth_segment(
     envelope: str = "linear",
 ) -> list[int]:
     """Generate PCM samples for one segment."""
-    wave_fn = square if waveform == "square" else triangle
     n = int(duration * SAMPLE_RATE)
+    # Pure silence — used as inter-beep gaps in the critical-warning
+    # siren so the rapid double-tone reads as separate pulses.
+    if waveform == "silence":
+        return [0] * n
+    wave_fn = square if waveform == "square" else triangle
     out: list[int] = []
     for i in range(n):
         t = i / SAMPLE_RATE
@@ -154,6 +158,29 @@ SOUNDS: dict[str, list[tuple[float, float, str, str]]] = {
         (880.0, 0.050, "square", "linear"),
         (1100.0, 0.070, "square", "linear"),
     ],
+    # Critical-warning chime — fires while the pet is ~60% of the way
+    # through any death countdown (hunger/happy/sick). Designed to be
+    # noticeable-but-gentle: a soft three-note descending motif on
+    # triangle waves (C5 → A4 → F4, an F-major arpeggio falling), with
+    # breathing room between phrases, finished by a sustained F4.
+    # Reads as "concerned chime calling for attention" rather than a
+    # fire alarm — triangle harmonic content is warm vs the piercing
+    # odd-harmonic stack of a square wave siren. Replayed every 15s by
+    # `PetState.maintainCriticalWarning()` until the pet recovers or
+    # dies. Five seconds total.
+    "danger": (
+        [
+            (523.0, 0.25, "triangle", "adsr"),    # C5
+            (0.0,   0.05, "silence",  "linear"),  # inter-note gap
+            (440.0, 0.25, "triangle", "adsr"),    # A4
+            (0.0,   0.05, "silence",  "linear"),  # inter-note gap
+            (349.0, 0.25, "triangle", "adsr"),    # F4
+            (0.0,   0.30, "silence",  "linear"),  # breathing room
+        ] * 4
+        + [
+            (349.0, 0.40, "triangle", "slow"),    # trailing sustain
+        ]
+    ),
 }
 
 
